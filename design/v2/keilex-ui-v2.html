@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>KeilEx — Options for Target · UI Preview v2</title>
+<style>
+  :root{
+    --bg:#1f1f1f; --bg2:#181818; --panel:#232323; --panel2:#1b1b1b;
+    --line:#2d2d2d; --line2:#3a3a3a; --text:#e6e6e6; --muted:#9aa4ae; --muted2:#7f8b96;
+    --accent:#0078d4; --accent2:#8fd3ff; --green:#89d185; --green2:#4ec95b;
+    --amber:#e2c08d; --red:#f48771; --violet:#c586c0;
+    --mono:"Cascadia Mono","Consolas","JetBrains Mono",monospace;
+    --ui:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#eef1f5}
+  body{display:flex;justify-content:center;padding:26px;font-family:var(--ui);-webkit-font-smoothing:antialiased}
+  .window{
+    width:1400px;height:860px;background:var(--bg);border-radius:8px;overflow:hidden;
+    border:1px solid #0b0b0b;box-shadow:0 32px 80px rgba(15,23,42,.35);
+    display:flex;flex-direction:column;color:var(--text);
+  }
+  .titlebar{
+    height:30px;flex:none;background:#0b0f14;border-bottom:1px solid #222;
+    display:flex;align-items:center;padding:0 0 0 12px;font-size:11px;color:#8b98a9;
+  }
+  .titlebar .logo{width:15px;height:15px;border-radius:3px;background:#0078d4;margin-right:8px;position:relative;flex:none}
+  .titlebar .logo:after{content:"";position:absolute;left:4px;top:4px;width:7px;height:7px;border:1.5px solid #fff;border-radius:1px}
+  .titlebar .menus{display:flex;gap:10px;color:#8b98a9}
+  .titlebar .title{flex:1;text-align:center;color:#7f8b96;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 20px}
+  .win-btns{display:flex;height:30px}
+  .win-btns span{width:44px;display:flex;align-items:center;justify-content:center;color:#9aa4ae;font-size:12px}
+  .vscode-tabs{height:36px;flex:none;background:#0b0f14;display:flex;align-items:stretch;border-bottom:1px solid #222}
+  .vtab{display:flex;align-items:center;gap:8px;padding:0 14px;font-size:12px;color:#8b98a9;border-right:1px solid #222;position:relative;white-space:nowrap}
+  .vtab svg{width:14px;height:14px;color:var(--accent2)}
+  .vtab.active{background:var(--bg);color:#fff}
+  .vtab.active:before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:var(--accent)}
+  .vtab .x{color:#777;margin-left:4px;font-size:13px}
+  .vtab .badge{margin-left:4px;font-size:9px;color:#8fe9f7;border:1px solid rgba(34,211,238,.35);background:rgba(34,211,238,.08);padding:1px 5px;border-radius:3px}
+  .crumb{height:24px;flex:none;background:var(--bg);border-bottom:1px solid #272727;display:flex;align-items:center;gap:6px;padding:0 16px;font-size:11px;color:#8b98a9}
+  .crumb .sep{color:#555}
+  .crumb .end{color:#d0d0d0}
+  .crumb .right{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:10.5px}
+  .crumb .right i{width:5px;height:5px;border-radius:50%;background:var(--green2)}
+
+  .editor{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+  .opt-head{
+    height:62px;flex:none;display:flex;align-items:center;gap:12px;padding:0 20px;
+    border-bottom:1px solid #2a2a2a;background:var(--bg);
+  }
+  .wand{
+    width:36px;height:36px;border-radius:7px;flex:none;display:flex;align-items:center;justify-content:center;
+    color:var(--accent2);background:linear-gradient(145deg,#0d4d86,#0a3660);border:1px solid #0b5b9b;
+  }
+  .wand svg{width:19px;height:19px}
+  .head-title{min-width:0}
+  .head-title h1{font-size:16px;font-weight:650;color:#f4f4f4;line-height:1.15;display:flex;align-items:center;gap:9px;white-space:nowrap}
+  .brand{font-size:9.5px;letter-spacing:.08em;color:#8fe9f7;border:1px solid rgba(34,211,238,.35);background:rgba(34,211,238,.08);border-radius:3px;padding:2px 6px;font-weight:700}
+  .head-title p{font-size:11.5px;color:var(--muted);margin-top:4px}
+  .head-spacer{flex:1}
+  .sync{display:flex;align-items:center;gap:7px;height:26px;padding:0 9px;border:1px solid rgba(63,185,80,.28);background:rgba(63,185,80,.08);border-radius:4px;color:#9ee6a4;font-size:11px;white-space:nowrap}
+  .sync i{width:6px;height:6px;border-radius:50%;background:var(--green2)}
+  .sync .conf{color:#8f9aa5;border-left:1px solid rgba(255,255,255,.13);padding-left:7px}
+  .xml-btn{height:28px;padding:0 10px;border-radius:4px;border:1px solid #3a3a3a;background:#202020;color:#b8b8b8;font-family:var(--mono);font-size:11px}
+  .xml-btn:hover{color:#fff;border-color:#555}
+
+  .opt-tabs{height:40px;flex:none;display:flex;align-items:stretch;gap:2px;padding:0 12px;border-bottom:1px solid #2a2a2a;background:var(--bg);overflow-x:auto;scrollbar-width:none}
+  .opt-tabs::-webkit-scrollbar{display:none}
+  .otab{border:0;background:transparent;color:#9aa4ae;padding:0 12px;font-size:12.5px;white-space:nowrap;border-bottom:2px solid transparent;display:flex;align-items:center;gap:6px}
+  .otab svg{width:13px;height:13px;opacity:.8}
+  .otab:hover{color:#fff}
+  .otab.active{color:#fff;border-bottom-color:var(--accent);background:linear-gradient(180deg,rgba(0,120,212,.12),transparent)}
+  .otab .cnt{font-size:9.5px;color:#8fe9f7;background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.25);border-radius:8px;padding:1px 5px;margin-left:2px}
+
+  .opt-body{flex:1;min-height:0;overflow:auto;position:relative}
+  .opt-body.items-mode{overflow:hidden;padding:0}
+  .tab-panel{display:none;height:100%}
+  .tab-panel.active{display:block}
+  .tab-panel.target-panel.active{display:block;overflow:auto}
+  .body-inner{max-width:1320px;margin:0 auto;padding:20px 24px 24px}
+  .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+  .col{min-width:0;display:flex;flex-direction:column;gap:14px}
+  .section{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:14px 16px;min-width:0}
+  .section.wide{grid-column:1/-1}
+  .wide-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 22px}
+  .more-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 22px}
+  .section h3{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.12em;color:#9db4c9;text-transform:uppercase;font-weight:700;margin-bottom:11px}
+  .section h3:after{content:"";height:1px;flex:1;background:#303030}
+  .row{display:grid;grid-template-columns:150px minmax(0,1fr);align-items:center;gap:14px;margin-bottom:9px;min-height:32px}
+  .row:last-child{margin-bottom:0}
+  .row label{font-size:12.5px;color:#b9b9b9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row input[type="text"],.row input[type="number"],.row select,.fake{
+    height:32px;width:100%;min-width:0;border:1px solid var(--line2);background:var(--panel2);border-radius:4px;
+    color:#e3e3e3;font-family:var(--mono);font-size:12.5px;padding:0 9px;
+  }
+  .row select{font-family:var(--ui);padding-right:26px;color:#e0e0e0}
+  .row input:disabled,.row select:disabled{opacity:.62}
+  .fake{display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:var(--ui);font-size:12.5px}
+  .fake .cv{color:#8f8f8f}
+  .row textarea{
+    grid-column:1/-1;width:100%;min-height:72px;border:1px solid var(--line2);background:var(--panel2);border-radius:4px;
+    color:#e0e0e0;font-family:var(--mono);font-size:12px;line-height:1.55;padding:8px 9px;resize:vertical;
+  }
+  .row.wide{grid-template-columns:1fr;gap:7px}
+  .row.wide label{margin-bottom:0}
+  .check{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#c8c8c8;min-height:26px;margin:2px 0}
+  .check input{width:14px;height:14px;accent-color:var(--accent);margin:0}
+  .check.readonly{opacity:.6}
+  .check-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 16px;margin-top:2px}
+  .check-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .field-block{margin-bottom:10px}
+  .field-block:last-child{margin-bottom:0}
+  .field-block .check{margin:0}
+
+  .mem{display:grid;grid-template-columns:74px minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:center;margin-bottom:8px}
+  .mem.head{font-size:10px;color:var(--muted2);letter-spacing:.05em;margin-bottom:5px}
+  .mem.head span:first-child{padding-left:24px}
+  .mem .check{font-size:12px;font-family:var(--mono);margin:0;gap:7px}
+  .mem input{height:32px;width:100%;min-width:0;border:1px solid var(--line2);background:var(--panel2);border-radius:4px;color:#e0e0e0;font-family:var(--mono);font-size:12px;padding:0 9px}
+  .mem input:disabled{opacity:.45}
+  .note{display:flex;gap:9px;align-items:flex-start;border:1px solid #31445a;background:#1b2834;border-radius:6px;padding:10px 12px;font-size:11.5px;line-height:1.55;color:#a9c4db}
+  .note svg{width:15px;height:15px;flex:none;margin-top:1px;color:#6cb6ff}
+  .hint-line{font-size:10.5px;color:var(--muted2);margin-top:5px;line-height:1.45}
+
+  /* ============ Project Items tab ============ */
+  .items-shell{height:100%;display:flex;flex-direction:column;min-height:0;background:var(--bg)}
+  .items-tools{height:54px;flex:none;display:flex;align-items:center;gap:14px;padding:0 20px;border-bottom:1px solid #2a2a2a}
+  .items-tools .title{font-size:14px;font-weight:650;color:#f0f0f0;white-space:nowrap}
+  .items-tools .sub{font-size:11px;color:var(--muted);white-space:nowrap}
+  .items-tools .spacer{flex:1}
+  .seg{display:flex;border:1px solid #3a3a3a;border-radius:5px;overflow:hidden;height:30px}
+  .seg button{border:0;background:transparent;color:#a9b3bd;padding:0 11px;font-size:11.5px;white-space:nowrap}
+  .seg button.active{background:rgba(0,120,212,.18);color:#fff;box-shadow:inset 0 0 0 1px rgba(0,120,212,.35)}
+  .search{height:30px;width:250px;border:1px solid #3a3a3a;border-radius:5px;background:#1b1b1b;display:flex;align-items:center;gap:7px;padding:0 9px;color:#7f8b96;font-size:11.5px}
+  .search input{border:0;background:transparent;color:#e0e0e0;font-size:11.5px;width:100%;outline:none}
+  .search svg{width:14px;height:14px;flex:none}
+
+  .items-grid{flex:1;min-height:0;display:grid;grid-template-columns:240px 300px minmax(0,1fr);gap:12px;padding:14px 20px 0}
+  .pane{min-width:0;min-height:0;display:flex;flex-direction:column;border:1px solid #343434;border-radius:6px;background:var(--panel);overflow:hidden}
+  .pane-head{height:38px;flex:none;display:flex;align-items:center;gap:7px;padding:0 10px;border-bottom:1px solid #343434;background:#252525}
+  .pane-head b{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#b9c3cc;font-weight:700;white-space:nowrap}
+  .pane-head .zh{font-size:10px;color:#7f8b96;font-weight:400;margin-left:3px}
+  .pane-head .spacer{flex:1}
+  .tools{display:flex;gap:2px}
+  .tool{width:24px;height:23px;border:1px solid transparent;border-radius:3px;background:transparent;color:#8f9aa5;display:flex;align-items:center;justify-content:center}
+  .tool svg{width:13px;height:13px}
+  .tool:hover{background:#333;border-color:#444;color:#fff}
+  .tool.danger:hover{color:var(--red);border-color:rgba(244,135,113,.4)}
+  .tool:disabled{opacity:.3}
+  .list{flex:1;min-height:0;overflow:auto;padding:4px}
+  .list::-webkit-scrollbar{width:10px}
+  .list::-webkit-scrollbar-thumb{background:#3a3a3a;border-radius:5px}
+  .trow{height:36px;display:flex;align-items:center;gap:8px;padding:0 9px;border-radius:4px;color:#d0d0d0;font-size:12.5px;white-space:nowrap;border-left:2px solid transparent}
+  .trow:hover{background:#2a2a2a}
+  .trow.selected{background:#094771;color:#fff;border-left-color:var(--accent)}
+  .trow svg{width:15px;height:15px;flex:none}
+  .trow .name{overflow:hidden;text-overflow:ellipsis}
+  .trow .count{margin-left:auto;font-size:10.5px;color:#8f9aa5}
+  .trow .badge{margin-left:auto;font-size:9.5px;color:#8fe9f7;border:1px solid rgba(61,148,219,.45);border-radius:3px;padding:1px 5px}
+  .trow .badge.cur{color:var(--green);border-color:rgba(137,209,133,.35)}
+  .trow .folder{color:#dcb67a}
+  .trow .target{color:var(--violet)}
+
+  .files-pane{min-width:0}
+  .files-head{height:38px;flex:none;display:flex;align-items:center;gap:9px;padding:0 10px;border-bottom:1px solid #343434;background:#252525}
+  .files-head b{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#b9c3cc;white-space:nowrap}
+  .files-head .num{font-size:10px;color:#8f9aa5;border-left:1px solid #3a3a3a;padding-left:8px}
+  .files-head .spacer{flex:1}
+  .files-head .mini-search{height:25px;width:170px;border:1px solid #3a3a3a;border-radius:4px;background:#1b1b1b;display:flex;align-items:center;padding:0 7px;color:#7f8b96;font-size:11px;gap:5px}
+  .files-head .mini-search input{border:0;background:transparent;color:#e0e0e0;font-size:11px;width:100%;outline:none}
+  .files-head .mini-search svg{width:12px;height:12px}
+  .file-table-head{height:28px;flex:none;display:grid;grid-template-columns:minmax(0,1.2fr) 100px minmax(0,1fr) 44px;gap:10px;align-items:center;padding:0 10px;border-bottom:1px solid #343434;color:#7f8b96;font-size:10px;letter-spacing:.05em;background:#222}
+  .file-table{flex:1;min-height:0;overflow:auto}
+  .frow{height:28px;display:grid;grid-template-columns:minmax(0,1.2fr) 100px minmax(0,1fr) 44px;gap:10px;align-items:center;padding:0 10px;border-bottom:1px solid #2d2d2d;color:#d0d0d0;font-size:12px;border-left:2px solid transparent}
+  .frow:hover{background:#2a2a2a}
+  .frow.selected{background:#094771;color:#fff;border-left-color:var(--accent)}
+  .fname{display:flex;align-items:center;gap:7px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fname svg{width:14px;height:14px;flex:none}
+  .fname .c{color:#7fb3e8}.fname .h{color:#c8a8e9}.fname .s{color:#b5cea8}
+  .fgroup{font-size:10.5px;color:#9fb0c2;background:#2a3440;border:1px solid #3a4b5e;border-radius:3px;padding:2px 6px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fpath{font-family:var(--mono);font-size:10.5px;color:#8f9aa5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .open-btn{height:26px;border:1px solid transparent;border-radius:4px;background:transparent;color:#9fb0c2;display:flex;align-items:center;justify-content:center}
+  .open-btn svg{width:14px;height:14px}
+  .open-btn:hover{background:#333;border-color:#4a4a4a;color:#fff}
+  .files-empty{padding:20px;color:#7f8b96;font-size:12px}
+
+  .items-actions{height:52px;flex:none;display:flex;align-items:center;gap:8px;padding:0 20px}
+  .items-actions .spacer{flex:1}
+  .items-actions .hint{font-size:10.5px;color:#7f8b96}
+  .btn{height:30px;min-width:0;padding:0 13px;border-radius:4px;border:1px solid #3a3a3a;background:#2a2a2a;color:#d0d0d0;font-size:12px}
+  .btn:hover{border-color:#555;color:#fff}
+  .btn.primary{background:var(--accent);border-color:#0a6cbd;color:#fff;font-weight:600}
+  .btn.small{height:28px;font-size:11.5px}
+  .btn:disabled{opacity:.4;cursor:default}
+
+  /* footer */
+  .opt-foot{height:58px;flex:none;display:flex;align-items:center;gap:12px;padding:0 20px;border-top:1px solid #2a2a2a;background:#1c1c1c}
+  .foot-note{display:flex;align-items:center;gap:7px;font-size:11px;color:#8f9aa5;min-width:0;line-height:1.4}
+  .foot-note b{color:#c5c5c5;font-weight:500}
+  .foot-note svg{width:14px;height:14px;color:var(--green);flex:none}
+  .foot-spacer{flex:1}
+  .btns{display:flex;gap:8px}
+  .obtn{height:32px;min-width:72px;padding:0 14px;border-radius:4px;border:1px solid #3a3a3a;background:#2a2a2a;color:#d0d0d0;font-size:12.5px}
+  .obtn.primary{background:var(--accent);border-color:#0a6cbd;color:#fff;font-weight:600}
+  .obtn:hover{border-color:#555}
+  .obtn.primary:hover{filter:brightness(1.07)}
+
+  .toast{position:fixed;right:34px;bottom:34px;z-index:50;padding:11px 15px;border-radius:6px;border:1px solid #3a3a3a;background:#252526;color:#e0e0e0;font-size:12px;box-shadow:0 14px 36px rgba(0,0,0,.45);display:none;max-width:520px;line-height:1.45}
+  .toast.show{display:block}
+  .toast b{color:#8fe9f7}
+
+  @media (max-width:1100px){
+    .items-grid{grid-template-columns:200px 240px minmax(0,1fr)}
+    .items-tools .seg{display:none}
+    .search{width:200px}
+  }
+</style>
+</head>
+<body>
+<div class="window">
+  <div class="titlebar">
+    <div class="logo"></div>
+    <div class="menus"><span>File</span><span>Edit</span><span>Selection</span><span>View</span><span>Go</span><span>Run</span><span>Terminal</span><span>Help</span></div>
+    <div class="title">USART.uvprojx — KeilEx — Visual Studio Code</div>
+    <div class="win-btns"><span>—</span><span>□</span><span>×</span></div>
+  </div>
+
+  <div class="vscode-tabs">
+    <div class="vtab active">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l7-7"/><path d="M8.6 3.2l1-1 3.2 3.2-1 1z"/><path d="M11.4 5.4l1.8 1.8"/><path d="M3 3.2v2M2 4.2h2M12.2 12v2M11.2 13h2"/></svg>
+      Options for Target <span class="badge">KeilEx</span><span class="x">×</span>
+    </div>
+    <div class="vtab"><span style="color:#7fb3e8">main.c</span><span class="x">×</span></div>
+  </div>
+  <div class="crumb">
+    <span>USART.uvprojx</span><span class="sep">›</span><span>Targets</span><span class="sep">›</span><span>Target 1</span><span class="sep">›</span><span class="end">Options for Target</span>
+    <div class="right"><i></i>KeilEx · Keil 已连接 · 0 冲突</div>
+  </div>
+
+  <div class="editor">
+    <div class="opt-head">
+      <div class="wand"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l7-7"/><path d="M8.6 3.2l1-1 3.2 3.2-1 1z"/><path d="M11.4 5.4l1.8 1.8"/><path d="M3 3.2v2M2 4.2h2M12.2 12v2M11.2 13h2"/></svg></div>
+      <div class="head-title">
+        <h1>Options for Target 'Target 1' <span class="brand">KeilEx</span></h1>
+        <p>魔法棒 · 11 个页签 · 修改保存到 .uvprojx / .uvoptx</p>
+      </div>
+      <div class="head-spacer"></div>
+      <div class="sync"><i></i>已同步<span class="conf">0 冲突</span></div>
+      <button class="xml-btn" id="xmlBtn">&lt;/&gt;</button>
+    </div>
+
+    <div class="opt-tabs" id="tabs">
+      <button class="otab" data-tab="device">Device</button>
+      <button class="otab" data-tab="target">Target</button>
+      <button class="otab" data-tab="output">Output</button>
+      <button class="otab" data-tab="listing">Listing</button>
+      <button class="otab" data-tab="user">User</button>
+      <button class="otab" data-tab="c">C/C++</button>
+      <button class="otab" data-tab="asm">Asm</button>
+      <button class="otab" data-tab="linker">Linker</button>
+      <button class="otab" data-tab="debug">Debug</button>
+      <button class="otab" data-tab="utilities">Utilities</button>
+      <button class="otab active" data-tab="items">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"><path d="M2 4.2h4.1l1.1 1.5H14v6.9H2z"/><path d="M2 6h12" opacity=".65"/></svg>
+        Project Items <span class="cnt">13</span>
+      </button>
+    </div>
+
+    <div class="opt-body items-mode" id="body">
+      <!-- Project Items -->
+      <section class="tab-panel active" data-panel="items" style="height:100%">
+        <div class="items-shell">
+          <div class="items-tools">
+            <span class="title">Project Items</span>
+            <span class="sub">工程项 · 13 个文件 · 3 个分组</span>
+            <span class="spacer"></span>
+            <div class="seg" id="fileMode">
+              <button class="active" data-mode="all">全部 13</button>
+              <button data-mode="group">当前分组</button>
+            </div>
+            <div class="search">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="7" cy="7" r="4.2"/><path d="M10.2 10.2L14 14" stroke-linecap="round"/></svg>
+              <input id="search" placeholder="搜索文件 / 分组…">
+            </div>
+          </div>
+
+          <div class="items-grid">
+            <div class="pane">
+              <div class="pane-head"><b>Project Targets</b><span class="zh">目标</span><span class="spacer"></span><div class="tools"><button class="tool">+</button><button class="tool danger">×</button><button class="tool">↑</button><button class="tool">↓</button></div></div>
+              <div class="list" id="targetList">
+                <div class="trow selected"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" class="target"><circle cx="8" cy="8" r="5.1"/><circle cx="8" cy="8" r="2"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2" stroke-linecap="round"/></svg><span class="name">Target 1</span><span class="badge cur">当前</span></div>
+              </div>
+            </div>
+
+            <div class="pane">
+              <div class="pane-head"><b>Groups</b><span class="zh">分组</span><span class="spacer"></span><div class="tools"><button class="tool">+</button><button class="tool danger">×</button><button class="tool">↑</button><button class="tool">↓</button></div></div>
+              <div class="list" id="groupList">
+                <div class="trow selected" data-group="Core"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" class="folder"><path d="M2 4.2h4.1l1.1 1.5H14v6.9H2z"/><path d="M2 6h12" opacity=".65"/></svg><span class="name">Core</span><span class="count">4</span></div>
+                <div class="trow" data-group="CMSIS"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" class="folder"><path d="M2 4.2h4.1l1.1 1.5H14v6.9H2z"/><path d="M2 6h12" opacity=".65"/></svg><span class="name">CMSIS</span><span class="count">2</span></div>
+                <div class="trow" data-group="StdPeriph"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" class="folder"><path d="M2 4.2h4.1l1.1 1.5H14v6.9H2z"/><path d="M2 6h12" opacity=".65"/></svg><span class="name">StdPeriph</span><span class="count">7</span></div>
+              </div>
+            </div>
+
+            <div class="pane files-pane">
+              <div class="files-head">
+                <b>Files</b><span class="num" id="fileCount">13</span>
+                <span class="spacer"></span>
+                <div class="mini-search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="7" cy="7" r="4.2"/><path d="M10.2 10.2L14 14" stroke-linecap="round"/></svg><input id="search2" placeholder="过滤文件…"></div>
+              </div>
+              <div class="file-table-head"><span>Name</span><span>Group</span><span>Path</span><span></span></div>
+              <div class="file-table" id="fileTable"></div>
+            </div>
+          </div>
+
+          <div class="items-actions">
+            <button class="btn small" id="setCurrent">Set as Current Target</button>
+            <button class="btn small">Add Files…</button>
+            <span class="spacer"></span>
+            <span class="hint">单击选择 · 双击在 VS Code 中打开 · 修改先暂存，点击“应用”写回 .uvprojx</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Target -->
+      <section class="tab-panel target-panel" data-panel="target">
+        <div class="body-inner">
+          <div class="cols">
+            <div class="col">
+              <div class="section">
+                <h3>目标 / TARGET</h3>
+                <div class="row"><label>Xtal (MHz)</label><input value="8.0"></div>
+                <div class="row"><label>ARM Compiler</label><div class="fake"><span>Use default compiler version 5</span><span class="cv">▾</span></div></div>
+                <label class="check"><input type="checkbox"> Use Cross-Module Optimization</label>
+                <label class="check"><input type="checkbox" checked> Use MicroLIB</label>
+                <label class="check"><input type="checkbox"> Big Endian</label>
+              </div>
+              <div class="section">
+                <h3>输出 / OUTPUT</h3>
+                <div class="row"><label>Name of Executable</label><input value="USART"></div>
+                <div class="row"><label>Output Folder</label><input value="..\..\Output\"></div>
+                <label class="check"><input type="checkbox" checked> Create HEX File</label>
+                <label class="check"><input type="checkbox" checked> Debug Information</label>
+              </div>
+            </div>
+            <div class="col">
+              <div class="section">
+                <h3>只读存储区 / ROM</h3>
+                <div class="mem head"><span></span><span>Start</span><span>Size</span></div>
+                <div class="mem"><label class="check"><input type="checkbox" checked> IROM1</label><input value="0x08000000"><input value="0x80000"></div>
+                <div class="mem"><label class="check"><input type="checkbox" disabled> IROM2</label><input disabled placeholder="—"><input disabled placeholder="—"></div>
+              </div>
+              <div class="section">
+                <h3>读写存储区 / RAM</h3>
+                <div class="mem head"><span></span><span>Start</span><span>Size</span></div>
+                <div class="mem"><label class="check"><input type="checkbox" checked> IRAM1</label><input value="0x20000000"><input value="0x10000"></div>
+                <div class="mem"><label class="check"><input type="checkbox" disabled> IRAM2</label><input disabled placeholder="—"><input disabled placeholder="—"></div>
+              </div>
+              <div class="note"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35"><circle cx="8" cy="8" r="6"/><path d="M8 7v4M8 5.1v.1" stroke-linecap="round"/></svg><span>保存时按 XML 节点原位写回，保留 RTE 组件与未知字段；Keil 打开中的冲突会被拦截。</span></div>
+            </div>
+          </div>
+          <div class="section wide" style="margin-top:14px">
+            <h3>更多目标选项 / MORE</h3>
+            <div class="more-grid">
+              <div class="row"><label>Toolset</label><input value="ARM-ADS" disabled></div>
+              <div class="row"><label>启动文件选择</label><select><option>8</option><option>1</option><option>2</option></select></div>
+              <div class="row"><label>RTOS</label><select><option>0 — 无</option><option>1 — RTX</option></select></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Generic tabs rendered by JS -->
+      <section class="tab-panel" data-panel="device"><div class="body-inner" id="panel-device"></div></section>
+      <section class="tab-panel" data-panel="output"><div class="body-inner" id="panel-output"></div></section>
+      <section class="tab-panel" data-panel="listing"><div class="body-inner" id="panel-listing"></div></section>
+      <section class="tab-panel" data-panel="user"><div class="body-inner" id="panel-user"></div></section>
+      <section class="tab-panel" data-panel="c"><div class="body-inner" id="panel-c"></div></section>
+      <section class="tab-panel" data-panel="asm"><div class="body-inner" id="panel-asm"></div></section>
+      <section class="tab-panel" data-panel="linker"><div class="body-inner" id="panel-linker"></div></section>
+      <section class="tab-panel" data-panel="debug"><div class="body-inner" id="panel-debug"></div></section>
+      <section class="tab-panel" data-panel="utilities"><div class="body-inner" id="panel-utilities"></div></section>
+    </div>
+
+    <div class="opt-foot">
+      <div class="foot-note" id="footNote"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 8.4l3.1 3.1 7.3-7.3"/></svg><span><b>.uvprojx</b> 已同步 · Keil 已连接</span></div>
+      <div class="foot-spacer"></div>
+      <div class="btns"><button class="obtn">重置</button><button class="obtn">取消</button><button class="obtn">应用</button><button class="obtn primary">确定</button></div>
+    </div>
+  </div>
+  <div class="titlebar" style="height:24px;flex:none;border-top:1px solid #222;border-bottom:0;background:#007acc;color:#fff;font-size:11px;padding:0 12px;display:flex;align-items:center;justify-content:space-between"><span>main*</span><span>KeilEx · Target 1 · 0 errors</span></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const files=[
+    {name:'main.c', group:'Core', path:'..\\..\\User\\main.c', icon:'c'},
+    {name:'mg_system_config.c', group:'Core', path:'..\\..\\User\\mg_system_config.c', icon:'c'},
+    {name:'mg_uart.c', group:'Core', path:'..\\..\\User\\mg_uart.c', icon:'c'},
+    {name:'stm32f10x_it.c', group:'Core', path:'..\\..\\User\\stm32f10x_it.c', icon:'c'},
+    {name:'startup_stm32f10x_hd.s', group:'CMSIS', path:'..\\..\\Startup\\startup_stm32f10x_hd.s', icon:'s'},
+    {name:'system_stm32f10x.c', group:'CMSIS', path:'..\\..\\CMSIS\\system_stm32f10x.c', icon:'c'},
+    {name:'misc.c', group:'StdPeriph', path:'..\\..\\Library\\misc.c', icon:'c'},
+    {name:'stm32f10x_gpio.c', group:'StdPeriph', path:'..\\..\\Library\\stm32f10x_gpio.c', icon:'c'},
+    {name:'stm32f10x_rcc.c', group:'StdPeriph', path:'..\\..\\Library\\stm32f10x_rcc.c', icon:'c'},
+    {name:'stm32f10x_usart.c', group:'StdPeriph', path:'..\\..\\Library\\stm32f10x_usart.c', icon:'c'},
+    {name:'stm32f10x_tim.c', group:'StdPeriph', path:'..\\..\\Library\\stm32f10x_tim.c', icon:'c'},
+    {name:'stm32f10x_adc.c', group:'StdPeriph', path:'..\\..\\Library\\stm32f10x_adc.c', icon:'c'},
+    {name:'stm32f10x_dma.c', group:'StdPeriph', path:'..\\..\\Library\\stm32f10x_dma.c', icon:'c'}
+  ];
+  let mode='all', selectedGroup='Core', selectedFile='main.c';
+  const fileTable=document.getElementById('fileTable');
+  const fileCount=document.getElementById('fileCount');
+  const toast=document.getElementById('toast');
+
+  function showToast(html){toast.innerHTML=html;toast.classList.add('show');clearTimeout(showToast.t);showToast.t=setTimeout(()=>toast.classList.remove('show'),2600);}
+  function fileIcon(type){
+    const paths={s:'<path d="M4 2.2h5l3 3v8.6H4z"/><path d="M9 2.2v3h3"/>',c:'<path d="M4 2.2h5l3 3v8.6H4z"/><path d="M9 2.2v3h3"/>',h:'<path d="M4 2.2h5l3 3v8.6H4z"/><path d="M9 2.2v3h3"/>'};
+    return '<svg class="'+type+'" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round">'+(paths[type]||paths.c)+'</svg>';
+  }
+  function renderFiles(){
+    const q=(document.getElementById('search2').value||'').toLowerCase();
+    let list=files;
+    if(mode==='group') list=list.filter(f=>f.group===selectedGroup);
+    if(q) list=list.filter(f=>(f.name+' '+f.group+' '+f.path).toLowerCase().includes(q));
+    fileTable.innerHTML='';
+    if(!list.length){fileTable.innerHTML='<div class="files-empty">没有匹配的文件。切换“全部 13”或清空搜索。</div>';fileCount.textContent='0';return;}
+    fileCount.textContent=list.length;
+    list.forEach(f=>{
+      const row=document.createElement('div');
+      row.className='frow'+(f.name===selectedFile?' selected':'');
+      row.innerHTML='<div class="fname">'+fileIcon(f.icon)+'<span>'+f.name+'</span></div>'
+        +'<span class="fgroup">'+f.group+'</span>'
+        +'<span class="fpath" title="'+f.path+'">'+f.path+'</span>'
+        +'<button class="open-btn" title="在 VS Code 中打开"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 3H3v10h10V9.5"/><path d="M9 2.5h4.5V7M13.5 2.5L7.8 8.2"/></svg></button>';
+      row.addEventListener('click',()=>{selectedFile=f.name;renderFiles();});
+      row.addEventListener('dblclick',()=>showToast('<b>打开 '+f.name+'</b> · 在 VS Code 编辑器中打开并可直接修改'));
+      row.querySelector('.open-btn').addEventListener('click',(e)=>{e.stopPropagation();showToast('<b>打开 '+f.name+'</b> · 在 VS Code 编辑器中打开并可直接修改');});
+      fileTable.appendChild(row);
+    });
+  }
+  document.getElementById('search2').addEventListener('input',renderFiles);
+  document.getElementById('search').addEventListener('input',(e)=>{
+    document.getElementById('search2').value=e.target.value;renderFiles();
+  });
+  document.querySelectorAll('#fileMode button').forEach(btn=>btn.addEventListener('click',()=>{
+    document.querySelectorAll('#fileMode button').forEach(b=>b.classList.toggle('active',b===btn));
+    mode=btn.dataset.mode;renderFiles();
+  }));
+  document.querySelectorAll('#groupList .trow').forEach(row=>row.addEventListener('click',()=>{
+    document.querySelectorAll('#groupList .trow').forEach(r=>r.classList.toggle('selected',r===row));
+    selectedGroup=row.dataset.group;
+    mode='group';
+    document.querySelectorAll('#fileMode button').forEach(b=>b.classList.toggle('active',b.dataset.mode==='group'));
+    renderFiles();
+  }));
+  document.getElementById('setCurrent').addEventListener('click',()=>showToast('<b>Set as Current Target</b> · 已选择 Target 1'));
+  renderFiles();
+
+  const generic={
+    device:[
+      {title:'器件 / DEVICE', fields:[['Device','STM32F103ZE'],['Vendor','STMicroelectronics'],['Pack ID','Keil.STM32F1xx_DFP.2.3.0'],['CPU / 存储器','IRAM(0x20000000,0x10000) IROM(0x08000000,0x80000) CPUTYPE("Cortex-M3")',null,'textarea']]},
+      {title:'调试资源 / DEBUG RESOURCES', fields:[['Flash 驱动','UL2CM3(-S0 -C0 -P0 -FD20000000 ...)',null,'textarea'],['SVD 文件','$$Device:STM32F103ZE$SVD\\STM32F103xx.svd'],['寄存器头文件','$$Device:STM32F103ZE$Device\\Include\\stm32f10x.h'],['Device ID','0']]},
+      {title:'环境 / ENVIRONMENT', fields:[['使用环境变量',null,null,'check'],['工具路径',''],['Target 包含路径','',null,'textarea'],['库路径','',null,'textarea']]}
+    ],
+    output:[
+      {title:'输出文件 / OUTPUT', wide:true, fields:[['Name of Executable','USART'],['Output Folder','..\\..\\Output\\'],['Create Executable',null,null,'check',true],['Create Library',null,null,'check'],['Create HEX File',null,null,'check',true],['Debug Information',null,null,'check',true],['Browse Information',null,null,'check',true],['Create Batch File',null,null,'check'],['Listing Folder','..\\..\\Output\\'],['HEX Format','1'],['Merge 32K',null,null,'check']]}
+    ],
+    listing:[
+      {title:'列表文件 / LISTING', fields:[['Listing Path','..\\..\\Output\\'],['Page Width','79'],['Page Length','66'],['Tab Stop','8'],['Generate Listings',null,null,'check']]},
+      {title:'列表内容 / CONTENT', fields:[['Create C Listing',null,null,'check',true],['Assembler Listing',null,null,'check',true],['Linker Listing',null,null,'check',true],['Preprocessor Listing',null,null,'check'],['Assembler Conditionals',null,null,'check',true],['Assembler Symbols',null,null,'check',true],['Assembler Xref',null,null,'check'],['C Conditionals',null,null,'check',true],['C Source',null,null,'check'],['C Include Files',null,null,'check'],['Linker Code Listing',null,null,'check']]}
+    ],
+    user:[
+      {title:'编译前 / BEFORE COMPILE', fields:[['运行程序 1',null,null,'check'],['程序 1',''],['运行程序 2',null,null,'check'],['程序 2','']]},
+      {title:'构建/重建前 / BEFORE BUILD', fields:[['运行程序 1',null,null,'check'],['程序 1',''],['运行程序 2',null,null,'check'],['程序 2','']]},
+      {title:'构建/重建后 / AFTER BUILD', fields:[['运行程序 1',null,null,'check'],['程序 1',''],['运行程序 2',null,null,'check'],['程序 2','']]},
+      {title:'运行选项 / RUN', fields:[['完成后蜂鸣',null,null,'check',true],['构建后启动调试',null,null,'check'],['使用仿真器',null,null,'check']]}
+    ],
+    c:[
+      {title:'预处理 / PREPROCESSOR', fields:[['Define','USE_STDPERIPH_DRIVER,STM32F10X_HD',null,'textarea'],['Undefine','',null,'textarea'],['Include Paths','..\\..\\User;..\\..\\Library;..\\..\\CMSIS',null,'textarea'],['Misc Controls','',null,'textarea']]},
+      {title:'语言与优化 / LANGUAGE & OPTIMIZATION', fields:[['Optimization','Level 0 (-O0)',null,'select',['Default','Level 0 (-O0)','Level 1 (-O1)','Level 2 (-O2)','Level 3 (-O3)']],['Optimize for Time',null,null,'check'],['Warning Level','Warnings',null,'select',['No warnings','Warnings','All warnings']],['C99 Mode',null,null,'check',true],['GNU Extensions',null,null,'check'],['C Standard (AC6)','C99',null,'select',['C90','C99','C11']],['C++ Standard (AC6)','C++98',null,'select',['C++98','C++11','C++14','C++17']]]},
+      {title:'代码生成 / CODE GENERATION', side:'right', grid:true, fields:[['Interworking',null,null,'check',true],['One ELF Section per Function',null,null,'check',true],['Split Load/Store Multiple',null,null,'check'],['Strict ANSI C',null,null,'check'],['Enum container always int',null,null,'check'],['Plain Char is Signed',null,null,'check'],['Read-Only Position Independent',null,null,'check'],['Read-Write Position Independent',null,null,'check'],['Thumb Mode',null,null,'check'],['No Auto Includes',null,null,'check'],['Use .xo Files',null,null,'check'],['Short Enums',null,null,'check',true],['Short wchar',null,null,'check',true],['Link-Time Optimization',null,null,'check'],['RTTI',null,null,'check']]}
+    ],
+    asm:[
+      {title:'预处理 / PREPROCESSOR', fields:[['Define',''],['Undefine',''],['Include Paths','',null,'textarea'],['Misc Controls','',null,'textarea']]},
+      {title:'汇编选项 / ASSEMBLER OPTIONS', grid:true, fields:[['Interworking',null,null,'check',true],['Read-Only PI',null,null,'check'],['Read-Write PI',null,null,'check'],['Thumb Mode',null,null,'check'],['Split LDM/STM',null,null,'check'],['Software Stack Check',null,null,'check'],['Disable Warnings',null,null,'check'],['No Auto Includes',null,null,'check'],['Use .xo Files',null,null,'check'],['Clang Assembler Option','4']]}
+    ],
+    linker:[
+      {title:'链接选项 / LINKER', fields:[['Use Memory Layout from Target',null,null,'check',true],['Read-Only PI',null,null,'check'],['Read-Write PI',null,null,'check'],["Don't Search Standard Libraries",null,null,'check'],["Report 'might fail' Conditions",null,null,'check',true],['Use Scatter File',null,null,'check']]},
+      {title:'存储布局 / MEMORY', fields:[['Text Address Range','0x08000000'],['Data Address Range','0x20000000'],['X/O Base',''],['Scatter File','']]},
+      {title:'附加输入 / ADDITIONAL INPUTS', fields:[['Include Libraries','',null,'textarea'],['Library Paths','',null,'textarea'],['Misc Controls','',null,'textarea'],['Input File',''],['Disabled Warnings','']]}
+    ],
+    debug:[
+      {title:'调试模式 / DEBUG MODE', fields:[['使用仿真器',null,null,'check'],['使用目标驱动',null,null,'check',true],['调试驱动','ST-Link Debugger',null,'select',['ST-Link Debugger','J-LINK / J-TRACE Cortex','ULINK2/ME','CMSIS-DAP Debugger']],['驱动索引','3']]},
+      {title:'启动行为 / STARTUP', fields:[['启动时加载程序',null,null,'check',true],['运行到 main()',null,null,'check',true],['初始化文件',''],['目标初始化文件','']]},
+      {title:'驱动 / DRIVER', fields:[['Driver DLL (pMon)','BIN\\STLink\\ST-LINKIII-KEIL_SWO.dll'],['仿真 DLL','SARMCM3.DLL'],['仿真参数','-REMAP'],['目标 DLL','DARMSTM.DLL'],['目标参数','-pSTM32F103ZE']]},
+      {title:'调试描述 / DESCRIPTION', fields:[['启用调试描述',null,null,'check',true],['启用 Flash 序列',null,null,'check',true],['协议','SWD',null,'select',['JTAG','SWD']],['调试时钟','10000000']]}
+    ],
+    utilities:[
+      {title:'FLASH 下载 / FLASH DOWNLOAD', fields:[['Flash 驱动索引','3'],['Flash 驱动 DLL','BIN\\STLink\\ST-LINKIII-KEIL_SWO.dll'],['下载后校验',null,null,'check',true],['更新目标后调试',null,null,'check',true],['协议','SWD',null,'select',['JTAG','SWD']],['调试时钟','10000000']]},
+      {title:'FLASH 算法 / ALGORITHM', fields:[['算法','STM32F10x High-density Flash',null,'select',['STM32F10x High-density Flash','STM32F10x Med-density Flash']],['起始地址','0x08000000'],['大小','0x80000'],['Flash 注册表','由 Keil 的 TargetDriverDllRegistry 管理；高级字段可在 </> XML 中编辑。',null,'textarea']]}
+    ]
+  };
+
+  function renderPanel(id){
+    const panel=document.getElementById('panel-'+id);
+    const sections=generic[id]||[];
+    const cols=document.createElement('div');cols.className='cols';
+    const left=document.createElement('div');left.className='col';
+    const right=document.createElement('div');right.className='col';
+    let auto=0;
+    sections.forEach((sec)=>{
+      const div=document.createElement('div');div.className='section';
+      div.appendChild(el('h3',sec.title));
+      if(sec.wide){
+        div.classList.add('wide');
+        const grid=document.createElement('div');grid.className='wide-fields';
+        if(sec.grid){
+          sec.fields.forEach(f=>grid.appendChild(checkEl(f)));
+        }else{
+          sec.fields.forEach(f=>grid.appendChild(fieldEl(f)));
+        }
+        div.appendChild(grid);
+        cols.appendChild(div);
+        return;
+      }
+      if(sec.grid){
+        const grid=document.createElement('div');grid.className='check-grid';
+        sec.fields.forEach(f=>grid.appendChild(checkEl(f)));
+        div.appendChild(grid);
+      }else{
+        sec.fields.forEach(f=>div.appendChild(fieldEl(f)));
+      }
+      let side=sec.side;
+      if(!side){ side=auto%2===0?'left':'right'; auto++; }
+      (side==='right'?right:left).appendChild(div);
+    });
+    cols.appendChild(left);cols.appendChild(right);panel.appendChild(cols);
+  }
+  function el(tag,text){const n=document.createElement(tag);n.textContent=text;return n;}
+  function fieldEl(f){
+    const [label,value,disable,type,options]=f;
+    if(type==='check'){
+      const l=document.createElement('label');l.className='check';
+      const c=document.createElement('input');c.type='checkbox';c.checked=!!(value || options);c.disabled=!!disable;
+      l.appendChild(c);l.appendChild(document.createTextNode(label));return l;
+    }
+    const row=document.createElement('div');row.className='row'+(type==='textarea'?' wide':'');
+    const lab=document.createElement('label');lab.textContent=label;
+    row.appendChild(lab);
+    if(type==='textarea'){
+      const ta=document.createElement('textarea');ta.value=value||'';row.appendChild(ta);
+    }else if(type==='select'){
+      const s=document.createElement('select');(options||[]).forEach(o=>{const op=document.createElement('option');op.textContent=o;if(o===value)op.selected=true;s.appendChild(op);});row.appendChild(s);
+    }else{
+      const inp=document.createElement('input');inp.type='text';inp.value=value||'';inp.disabled=!!disable;row.appendChild(inp);
+    }
+    return row;
+  }
+  function checkEl(f){
+    const [label,value,disable,type,options]=f;
+    const l=document.createElement('label');l.className='check';
+    const c=document.createElement('input');c.type='checkbox';c.checked=!!(value || options);c.disabled=!!disable;
+    l.appendChild(c);l.appendChild(document.createTextNode(label));return l;
+  }
+  Object.keys(generic).forEach(renderPanel);
+
+  const tabs=document.querySelectorAll('.otab');
+  const body=document.getElementById('body');
+  const foot=document.getElementById('footNote');
+  tabs.forEach(tab=>tab.addEventListener('click',()=>{
+    tabs.forEach(t=>t.classList.toggle('active',t===tab));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.dataset.panel===tab.dataset.tab));
+    body.classList.toggle('items-mode',tab.dataset.tab==='items');
+    if(tab.dataset.tab==='items'){
+      foot.innerHTML='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 8.4l3.1 3.1 7.3-7.3"/></svg><span><b>.uvprojx</b> 工程项修改暂存 · 点击“应用”写回 <b>.uvprojx</b> / <b>.uvoptx</b></span>';
+    }else{
+      foot.innerHTML='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 8.4l3.1 3.1 7.3-7.3"/></svg><span>上次写入 <b>.uvprojx</b> 20:31:04 · Keil 已连接</span>';
+    }
+    body.scrollTop=0;
+  }));
+  document.getElementById('xmlBtn').addEventListener('click',()=>showToast('<b>Advanced XML</b> · 打开 TargetOption 原始 XML 编辑'));
+  document.querySelectorAll('.obtn').forEach(b=>b.addEventListener('click',()=>{
+    if(b.textContent.includes('应用')||b.textContent.includes('确定')) showToast('<b>已保存</b> · 修改写回 .uvprojx / .uvoptx');
+  }));
+})();
+</script>
+</body>
+</html>

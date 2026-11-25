@@ -1,0 +1,15 @@
+node_modules/
+dist/
+test/.tmp/
+test/.edge-profile/
+test/preview-*.html
+test/preview-*.png
+test/tmp-*.js
+test-project/
+*.vsix
+*.log
+*.keil-studio.bak
+.install-*/
+.install-extract*/
+.backup-keilex-*/
+.vscode-clean/

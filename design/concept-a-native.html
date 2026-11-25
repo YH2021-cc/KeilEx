@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Concept A — Native Workbench · Keil Studio</title>
+<style>
+  :root{
+    --ink:#0f172a; --muted:#667085; --line:#d7dce5;
+    --blue:#0078d4; --blue-2:#2b88d8; --blue-soft:#e9f2fc;
+    --green:#89d185; --green-2:#2e7d32; --amber:#e2c08d; --red:#f48771;
+    --app:#1f1f1f; --app-2:#181818; --app-3:#252526; --app-line:#2b2b2b;
+    --txt:#cccccc; --txt-dim:#8c8c8c; --txt-bright:#ffffff;
+    --ui:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+    --disp:"Segoe UI Variable Display","Segoe UI","Microsoft YaHei UI",sans-serif;
+    --mono:"Cascadia Mono","Consolas","JetBrains Mono",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#eef1f5}
+  body{
+    font-family:var(--ui); color:var(--ink); -webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(circle at 1px 1px, rgba(15,23,42,.055) 1px, transparent 0) 0 0/22px 22px,
+      linear-gradient(135deg,#f6f8fb 0%,#e9edf3 58%,#eef1f5 100%);
+    min-height:1180px;
+  }
+  .sprite{position:absolute;width:0;height:0;overflow:hidden}
+  .board{width:1800px;min-height:1180px;margin:0 auto;padding:30px 30px 26px;position:relative}
+  .board:before{content:"";position:absolute;left:30px;right:30px;top:0;height:3px;background:linear-gradient(90deg,var(--blue),#65b8e8 32%,transparent 72%)}
+
+  /* ---------- board header ---------- */
+  .board-head{display:grid;grid-template-columns:1fr 540px;align-items:end;gap:40px;padding:6px 0 22px;border-bottom:1px solid rgba(15,23,42,.12)}
+  .kicker{display:flex;align-items:center;gap:10px;font-size:10.5px;letter-spacing:.18em;font-weight:700;color:var(--blue);text-transform:uppercase;margin-bottom:12px}
+  .kicker .pill{padding:3px 8px;border:1px solid rgba(0,120,212,.35);border-radius:999px;background:rgba(0,120,212,.07);letter-spacing:.12em}
+  .kicker .thin{color:#98a2b3;font-weight:600;letter-spacing:.1em}
+  h1{font-family:var(--disp);font-size:46px;line-height:.98;letter-spacing:-.045em;font-weight:650;color:#0b1220}
+  h1 .sub{display:block;font-size:20px;letter-spacing:.01em;font-weight:500;color:#475467;margin-top:10px}
+  .head-desc{font-size:12.5px;line-height:1.55;color:#667085;margin-top:12px;max-width:760px}
+  .chips{display:flex;gap:7px;margin-top:14px;flex-wrap:wrap}
+  .chip{font-size:10.5px;font-weight:600;padding:4px 9px;border-radius:5px;background:#fff;border:1px solid #d0d5dd;color:#344054;box-shadow:0 1px 0 rgba(16,24,40,.03)}
+  .chip.blue{background:var(--blue);border-color:var(--blue);color:#fff}
+
+  .flow-card{background:#fff;border:1px solid #d0d5dd;border-radius:10px;padding:14px 16px 12px;box-shadow:0 12px 28px rgba(16,24,40,.06)}
+  .flow-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .flow-top b{font-size:10px;letter-spacing:.14em;color:#344054}
+  .flow-top span{font-size:10px;color:#667085}
+  .flow{display:grid;grid-template-columns:1fr 26px 1.18fr 26px 1fr;align-items:center;gap:0}
+  .node{border:1px solid #d0d5dd;background:#f8fafc;border-radius:6px;padding:7px 8px;min-height:46px;display:flex;flex-direction:column;justify-content:center}
+  .node b{font-size:10.5px;font-weight:650;color:#101828;white-space:nowrap}
+  .node span{font-size:8.5px;color:#667085;margin-top:2px;white-space:nowrap}
+  .node.mid{background:#f0f7ff;border-color:#b6d9f7}
+  .node.mid b{color:#005a9e;font-family:var(--mono);font-size:9.5px}
+  .link{height:1px;background:#98a2b3;position:relative;margin:0 4px}
+  .link:after{content:"";position:absolute;right:-1px;top:-2.5px;border-left:5px solid #98a2b3;border-top:3px solid transparent;border-bottom:3px solid transparent}
+  .flow-note{display:flex;align-items:center;gap:6px;margin-top:9px;font-size:9px;color:#667085}
+  .flow-note i{width:5px;height:5px;border-radius:50%;background:var(--green-2);display:inline-block}
+
+  /* ---------- stage ---------- */
+  .stage{display:grid;grid-template-columns:1180px 540px;gap:20px;margin-top:22px;align-items:start}
+
+  /* ---------- app shell ---------- */
+  .app{width:1180px;height:780px;background:var(--app);border-radius:10px;overflow:hidden;border:1px solid #0b0b0b;box-shadow:0 30px 60px rgba(15,23,42,.22),0 2px 0 rgba(255,255,255,.55) inset;display:flex;flex-direction:column}
+  .titlebar{height:30px;background:#181818;border-bottom:1px solid #252525;display:flex;align-items:center;padding:0 0 0 10px;color:#cccccc;font-size:10.5px;flex:none;user-select:none}
+  .tb-left{display:flex;align-items:center;gap:9px;min-width:390px}
+  .vs-logo{width:16px;height:16px}
+  .menus{display:flex;gap:9px;color:#cccccc}
+  .menus span{opacity:.85}
+  .tb-title{flex:1;text-align:center;color:#b9b9b9;font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 14px}
+  .win-controls{display:flex;height:30px}
+  .win-controls span{width:46px;display:flex;align-items:center;justify-content:center;color:#cfcfcf;font-size:13px;line-height:1}
+  .win-controls .close:hover{background:#e81123;color:#fff}
+  .app-body{flex:1;display:flex;min-height:0}
+  .activity{width:48px;background:#181818;border-right:1px solid #252525;display:flex;flex-direction:column;align-items:center;padding:6px 0;gap:2px;flex:none}
+  .act{width:48px;height:44px;display:flex;align-items:center;justify-content:center;color:#858585;position:relative}
+  .act svg{width:21px;height:21px}
+  .act.on{color:#fff}
+  .act.on:before{content:"";position:absolute;left:0;top:7px;bottom:7px;width:2px;background:var(--blue)}
+  .act.wand-badge:after{content:"";position:absolute;right:12px;top:10px;width:5px;height:5px;border-radius:50%;background:var(--green)}
+  .act-spacer{flex:1}
+
+  /* ---------- sidebar ---------- */
+  .sidebar{width:260px;background:#181818;border-right:1px solid #252525;display:flex;flex-direction:column;min-height:0;color:var(--txt);flex:none}
+  .side-head{height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 10px 0 14px;font-size:9.5px;letter-spacing:.13em;font-weight:700;color:#b5b5b5;flex:none}
+  .side-head .icons{display:flex;gap:8px;color:#9d9d9d}
+  .side-head svg{width:14px;height:14px}
+  .project-card{display:flex;align-items:center;gap:9px;margin:0 10px 8px;padding:9px 9px;background:#1f1f1f;border:1px solid #2b2b2b;border-radius:6px;position:relative}
+  .proj-icon{width:30px;height:30px;border-radius:6px;background:linear-gradient(145deg,#0b5fa5,#0a3d6b);display:flex;align-items:center;justify-content:center;color:#8fd3ff;flex:none;border:1px solid #0a4f86}
+  .proj-icon svg{width:17px;height:17px}
+  .proj-name{font-size:12.5px;font-weight:650;color:#f1f1f1;line-height:1.1}
+  .proj-sub{font-size:9px;color:#8f8f8f;margin-top:3px;letter-spacing:.02em}
+  .live{position:absolute;right:8px;top:8px;font-size:7.5px;font-weight:700;letter-spacing:.08em;color:#9ee6a4;background:rgba(63,185,80,.12);border:1px solid rgba(63,185,80,.35);border-radius:3px;padding:2px 4px;display:flex;align-items:center;gap:3px}
+  .live i{width:4px;height:4px;border-radius:50%;background:#4ec95b;box-shadow:0 0 0 2px rgba(78,201,91,.18)}
+  .target-box{margin:0 10px 9px}
+  .target-cap{font-size:8px;letter-spacing:.14em;color:#7f7f7f;font-weight:700;margin:0 2px 4px;display:flex;justify-content:space-between}
+  .target-cap b{color:#9a9a9a;font-weight:600;letter-spacing:.02em;font-size:8px}
+  .target-select{width:100%;height:30px;border:1px solid #3a3a3a;background:#252526;border-radius:5px;display:flex;align-items:center;gap:7px;padding:0 8px;color:#e8e8e8;font-size:11.5px;font-family:var(--ui)}
+  .target-select svg{width:14px;height:14px;color:#c586c0;flex:none}
+  .target-select .cv{margin-left:auto;color:#aaa}
+  .target-select .cnt{font-size:8.5px;color:#8f8f8f;border-left:1px solid #3a3a3a;padding-left:6px;margin-left:2px}
+  .actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin:0 10px 6px}
+  .abtn{height:50px;border:1px solid #343434;background:#232323;border-radius:5px;color:#cfcfcf;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-family:var(--ui)}
+  .abtn svg{width:16px;height:16px}
+  .abtn b{font-size:9.5px;font-weight:600;line-height:1}
+  .abtn small{font-size:7px;color:#8f8f8f;letter-spacing:.05em;line-height:1}
+  .abtn.primary{background:var(--blue);border-color:#0a6cbd;color:#fff}
+  .abtn.primary small{color:#cfe8ff}
+  .subactions{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:0 10px 8px}
+  .sbtn{height:26px;border:1px solid #343434;background:#202020;border-radius:4px;color:#bdbdbd;font-size:9.5px;display:flex;align-items:center;justify-content:center;gap:5px;font-family:var(--ui)}
+  .sbtn svg{width:12px;height:12px}
+  .tree{flex:1;min-height:0;overflow:hidden;padding:1px 6px 4px;border-top:1px solid #242424}
+  .row{height:22px;display:flex;align-items:center;gap:5px;padding-right:7px;border-radius:3px;font-size:11px;color:#cfcfcf;white-space:nowrap;position:relative}
+  .row svg{width:13px;height:13px;flex:none}
+  .row .chev{width:12px;height:12px;color:#9d9d9d}
+  .row .name{overflow:hidden;text-overflow:ellipsis}
+  .row .count{margin-left:auto;font-size:8.5px;color:#7f7f7f;background:#252525;border-radius:8px;padding:1px 5px;min-width:17px;text-align:center}
+  .row.target{font-weight:650;color:#f0f0f0}
+  .row.target .tgt{color:#c586c0}
+  .row.target.current{background:rgba(0,120,212,.13);box-shadow:inset 2px 0 0 var(--blue)}
+  .row .cur{margin-left:auto;font-size:7px;letter-spacing:.06em;color:#8fd3ff;border:1px solid rgba(61,148,219,.45);border-radius:3px;padding:1px 3px}
+  .row.group{color:#d7d7d7}
+  .row.group .folder{color:#dcb67a}
+  .row.file{color:#c5c5c5}
+  .row.file.active{background:#37373d;color:#fff}
+  .row.file .c{color:#7fb3e8}
+  .row.file .h{color:#c8a8e9}
+  .row.file .s{color:#b5cea8}
+  .row.file .t{color:#9a9a9a}
+  .row.dim{opacity:.55}
+  .side-foot{flex:none;border-top:1px solid #252525;padding:9px 12px 10px;font-size:8.5px;color:#8b8b8b}
+  .mem{display:grid;grid-template-columns:34px 1fr 34px;align-items:center;gap:6px;margin-bottom:5px}
+  .mem b{font-size:7.5px;letter-spacing:.08em;color:#9a9a9a;font-weight:600}
+  .mem .bar{height:4px;border-radius:2px;background:#2b2b2b;overflow:hidden}
+  .mem .bar i{display:block;height:100%;background:#4ec9b0;border-radius:2px}
+  .mem .val{text-align:right;font-family:var(--mono);font-size:8px;color:#a9a9a9}
+  .last-build{display:flex;align-items:center;gap:5px;margin-top:6px;color:#9a9a9a}
+  .last-build .ok{color:#89d185}
+  .last-build .dot{width:5px;height:5px;border-radius:50%;background:#4ec95b}
+
+  /* ---------- main ---------- */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--app)}
+  .tabs{height:34px;background:#181818;display:flex;align-items:stretch;border-bottom:1px solid #252525;flex:none;overflow:hidden}
+  .tab{display:flex;align-items:center;gap:6px;padding:0 11px;font-size:10.5px;color:#9d9d9d;border-right:1px solid #252525;position:relative;white-space:nowrap}
+  .tab svg{width:13px;height:13px}
+  .tab.on{background:var(--app);color:#fff}
+  .tab.on:before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:var(--blue)}
+  .tab .tab-dot{width:5px;height:5px;border-radius:50%;background:var(--green);margin-left:2px}
+  .tab .x{margin-left:4px;color:#888;font-size:11px}
+  .tab-add{width:30px;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:15px}
+  .tab-actions{margin-left:auto;display:flex;align-items:center;gap:9px;padding:0 11px;color:#aaa}
+  .tab-actions svg{width:13px;height:13px}
+  .crumb{height:22px;background:var(--app);border-bottom:1px solid #272727;display:flex;align-items:center;gap:5px;padding:0 14px;font-size:9.5px;color:#9d9d9d;flex:none}
+  .crumb svg{width:10px;height:10px;color:#777}
+  .crumb .sep{color:#666}
+  .crumb .end{color:#d0d0d0}
+  .crumb .right{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:9px;color:#8c8c8c}
+  .crumb .right i{width:5px;height:5px;border-radius:50%;background:var(--green);display:inline-block}
+
+  /* ---------- options editor ---------- */
+  .editor{flex:1;min-height:0;overflow:hidden;background:var(--app);display:flex;flex-direction:column}
+  .opt-head{height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 16px 0 18px;border-bottom:1px solid #2a2a2a;flex:none}
+  .opt-title{display:flex;align-items:center;gap:10px}
+  .wand-lg{width:29px;height:29px;border-radius:6px;background:linear-gradient(145deg,#0d4d86,#0a3660);border:1px solid #0b5b9b;display:flex;align-items:center;justify-content:center;color:#8fd3ff}
+  .wand-lg svg{width:16px;height:16px}
+  .opt-title h2{font-size:12px;font-weight:650;color:#f0f0f0;line-height:1.1}
+  .opt-title p{font-size:8.5px;color:#8f8f8f;margin-top:2px}
+  .opt-sync{display:flex;align-items:center;gap:5px;font-size:8.5px;color:#9ee6a4;background:rgba(63,185,80,.08);border:1px solid rgba(63,185,80,.28);border-radius:4px;padding:3px 7px}
+  .opt-sync i{width:5px;height:5px;border-radius:50%;background:#4ec95b}
+  .opt-sync .conf{color:#8f8f8f;border-left:1px solid rgba(255,255,255,.12);padding-left:6px}
+  .opt-tabs{height:30px;display:flex;align-items:stretch;border-bottom:1px solid #2a2a2a;padding:0 10px;gap:1px;flex:none;overflow:hidden}
+  .otab{display:flex;align-items:center;padding:0 8px;font-size:8.8px;color:#9d9d9d;border-bottom:1px solid transparent;white-space:nowrap}
+  .otab.on{color:#fff;border-bottom-color:var(--blue);background:linear-gradient(180deg,rgba(0,120,212,.12),transparent)}
+  .opt-body{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:13px 18px 10px;min-height:0;overflow:hidden}
+  .opt-col{min-width:0;display:flex;flex-direction:column;gap:10px}
+  .fsec{border:1px solid #2d2d2d;background:#232323;border-radius:5px;padding:9px 10px}
+  .fsec h3{font-size:8px;letter-spacing:.13em;color:#9db4c9;font-weight:700;margin-bottom:7px;display:flex;align-items:center;gap:6px}
+  .fsec h3:after{content:"";height:1px;background:#303030;flex:1}
+  .frow{display:grid;grid-template-columns:104px 1fr;align-items:center;gap:8px;margin-bottom:5px}
+  .frow label{font-size:9px;color:#b0b0b0;white-space:nowrap}
+  .frow input,.frow select,.frow .fake{height:22px;border:1px solid #3a3a3a;background:#1b1b1b;border-radius:3px;color:#e0e0e0;font-family:var(--mono);font-size:9px;padding:0 6px;min-width:0;width:100%}
+  .frow select{font-family:var(--ui);font-size:9px;color:#d8d8d8;appearance:none;background-image:linear-gradient(45deg,transparent 50%,#999 50%),linear-gradient(135deg,#999 50%,transparent 50%);background-position:calc(100% - 10px) 9px,calc(100% - 6px) 9px;background-size:4px 4px,4px 4px;background-repeat:no-repeat}
+  .check{display:flex;align-items:center;gap:6px;font-size:9px;color:#bfbfbf;margin:4px 0 0}
+  .box{width:11px;height:11px;border:1px solid #555;border-radius:2px;background:#1b1b1b;display:inline-flex;align-items:center;justify-content:center;flex:none}
+  .box.checked{background:var(--blue);border-color:var(--blue);position:relative}
+  .box.checked:after{content:"";width:6px;height:3px;border-left:1.5px solid #fff;border-bottom:1.5px solid #fff;transform:rotate(-45deg) translate(0,-1px)}
+  .memgrid{display:grid;grid-template-columns:52px 1fr 1fr;gap:5px;align-items:center;margin-bottom:4px}
+  .memgrid.head{font-size:7.5px;color:#7f8b96;letter-spacing:.05em;margin-bottom:3px}
+  .memgrid.head span:nth-child(1){padding-left:17px}
+  .memgrid .check{margin:0;font-size:8.5px;font-family:var(--mono)}
+  .memgrid input{height:21px;border:1px solid #3a3a3a;background:#1b1b1b;border-radius:3px;color:#dcdcdc;font-family:var(--mono);font-size:8.5px;padding:0 5px;min-width:0}
+  .note-box{display:flex;gap:7px;align-items:flex-start;border:1px solid #31445a;background:#1b2834;border-radius:5px;padding:7px 8px;font-size:8.5px;line-height:1.45;color:#a9c4db}
+  .note-box svg{width:12px;height:12px;flex:none;margin-top:1px;color:#6cb6ff}
+  .opt-foot{height:46px;border-top:1px solid #2a2a2a;display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex:none;background:#1c1c1c}
+  .foot-note{font-size:8px;color:#858585;display:flex;align-items:center;gap:5px}
+  .foot-note b{color:#a9a9a9;font-weight:500}
+  .btn-row{display:flex;gap:6px}
+  .btn{height:25px;min-width:58px;border-radius:4px;border:1px solid #3a3a3a;background:#2a2a2a;color:#d0d0d0;font-size:9.5px;font-family:var(--ui);padding:0 10px}
+  .btn.primary{background:var(--blue);border-color:#0a6cbd;color:#fff;font-weight:600}
+
+  /* ---------- panel ---------- */
+  .panel{height:196px;background:#181818;border-top:1px solid #2b2b2b;display:flex;flex-direction:column;flex:none;position:relative}
+  .panel-head{height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 10px 0 14px;border-bottom:1px solid #262626;flex:none}
+  .ptabs{display:flex;gap:15px;align-items:center;font-size:8.5px;letter-spacing:.1em;color:#8f8f8f;font-weight:600}
+  .ptabs .on{color:#e8e8e8;position:relative}
+  .ptabs .on:after{content:"";position:absolute;left:0;right:0;bottom:-9px;height:1px;background:#e8e8e8}
+  .ptabs b{font-size:7.5px;background:#333;color:#bbb;border-radius:7px;padding:1px 4px;margin-left:3px}
+  .pactions{display:flex;gap:9px;color:#999}
+  .pactions svg{width:12px;height:12px}
+  .log{padding:7px 13px;font-family:var(--mono);font-size:8.6px;line-height:1.55;color:#c7c7c7;white-space:pre;overflow:hidden}
+  .log .dim{color:#8f8f8f}
+  .log .ok{color:#89d185}
+  .log .warn{color:#e2c08d}
+  .log .err{color:#f48771}
+  .log .path{color:#9cdcfe}
+  .build-badge{position:absolute;right:12px;top:38px;display:flex;align-items:center;gap:5px;font-size:8px;font-weight:700;letter-spacing:.06em;color:#9ee6a4;background:rgba(63,185,80,.08);border:1px solid rgba(63,185,80,.3);border-radius:4px;padding:3px 6px}
+  .build-badge svg{width:10px;height:10px}
+  .build-badge span{color:#8f8f8f;font-weight:500;border-left:1px solid rgba(255,255,255,.12);padding-left:5px;letter-spacing:0}
+
+  /* ---------- status ---------- */
+  .statusbar{height:24px;background:#007acc;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 9px;font-size:9px;flex:none}
+  .sb-left,.sb-right{display:flex;align-items:center;gap:12px}
+  .sb-item{display:flex;align-items:center;gap:4px;white-space:nowrap}
+  .sb-item svg{width:11px;height:11px}
+  .sb-item .live-dot{width:5px;height:5px;border-radius:50%;background:#9ef0a7;box-shadow:0 0 0 2px rgba(158,240,167,.2)}
+  .lang{padding:1px 5px;border:1px solid rgba(255,255,255,.35);border-radius:3px;display:flex;gap:2px;font-size:8.5px}
+  .lang b{background:rgba(255,255,255,.22);padding:0 3px;border-radius:2px}
+
+  /* ---------- details ---------- */
+  .details{width:540px;display:flex;flex-direction:column;gap:10px}
+  .detail-label{display:flex;align-items:center;gap:7px;font-size:8.5px;letter-spacing:.15em;font-weight:700;color:#667085;margin:0 1px 4px}
+  .detail-label b{color:var(--blue);font-size:8px}
+  .detail-label:after{content:"";height:1px;background:#d0d5dd;flex:1}
+  .mini{border-radius:8px;overflow:hidden;background:#1f1f1f;border:1px solid #111;box-shadow:0 14px 30px rgba(15,23,42,.16)}
+  .mini-opt{height:360px;display:flex;flex-direction:column}
+  .mini-opt .mini-body{height:auto;flex:1;min-height:0}
+  .mini-items{height:230px;display:flex;flex-direction:column}
+  .mini-title{height:26px;background:#181818;display:flex;align-items:center;gap:6px;padding:0 9px;color:#cfcfcf;font-size:9px;border-bottom:1px solid #2a2a2a}
+  .mini-title svg{width:12px;height:12px;color:#8fd3ff}
+  .mini-title .x{margin-left:auto;color:#999;font-size:12px}
+  .mini-tabs{height:23px;display:flex;align-items:stretch;border-bottom:1px solid #2a2a2a;padding:0 6px;overflow:hidden}
+  .mini-tab{display:flex;align-items:center;padding:0 6px;font-size:7.2px;color:#8f8f8f;white-space:nowrap;border-bottom:1px solid transparent}
+  .mini-tab.on{color:#fff;border-bottom-color:var(--blue);background:rgba(0,120,212,.1)}
+  .mini-body{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:9px 10px;height:286px;overflow:hidden}
+  .mini-sec h4{font-size:7px;letter-spacing:.12em;color:#8fa9bf;font-weight:700;margin-bottom:5px}
+  .mini-row{display:grid;grid-template-columns:64px 1fr;gap:5px;align-items:center;margin-bottom:4px}
+  .mini-row label{font-size:7.2px;color:#a9a9a9;white-space:nowrap}
+  .mini-row .f{height:18px;border:1px solid #3a3a3a;background:#1a1a1a;border-radius:2px;font-family:var(--mono);font-size:7px;color:#d5d5d5;display:flex;align-items:center;padding:0 5px;white-space:nowrap;overflow:hidden}
+  .mini-checks{display:flex;flex-direction:column;gap:4px;margin-top:5px}
+  .mini-check{display:flex;align-items:center;gap:4px;font-size:7.2px;color:#b5b5b5}
+  .mini-box{width:8px;height:8px;border:1px solid #555;border-radius:1px;background:#1a1a1a;flex:none}
+  .mini-box.on{background:var(--blue);border-color:var(--blue)}
+  .mini-foot{height:28px;border-top:1px solid #2a2a2a;background:#1b1b1b;display:flex;align-items:center;justify-content:space-between;padding:0 8px;font-size:7px;color:#8f8f8f}
+  .mini-foot .b{height:18px;border:1px solid #3a3a3a;border-radius:2px;background:#2a2a2a;color:#ccc;font-size:7px;padding:0 7px;display:inline-flex;align-items:center}
+  .mini-foot .b.p{background:var(--blue);border-color:#0a6cbd;color:#fff}
+  .mini-items .mini-tabs{height:22px}
+  .mini-items .mini-tab{font-size:6.8px;padding:0 5px}
+  .mini-panes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;padding:7px 8px 6px;height:134px;overflow:hidden}
+  .pane{border:1px solid #343434;background:#242424;border-radius:2px;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+  .pane-head{height:15px;background:#2c2c2c;color:#bdbdbd;font-size:6.5px;display:flex;align-items:center;justify-content:space-between;padding:0 4px;border-bottom:1px solid #343434;white-space:nowrap}
+  .pane-head .tools{color:#8f8f8f;letter-spacing:1px;font-size:7px}
+  .list{padding:2px;flex:1}
+  .li{height:15px;display:flex;align-items:center;gap:3px;padding:0 3px;font-size:7.2px;color:#c5c5c5;border-radius:2px;white-space:nowrap;overflow:hidden}
+  .li svg{width:9px;height:9px;flex:none;color:#dcb67a}
+  .li.sel{background:#094771;color:#fff}
+  .li.sel svg{color:#cfe8ff}
+  .mini-items .mini-foot{height:37px;padding:0 7px;display:flex;align-items:center;gap:3px}
+  .mini-items .mini-foot .spacer{flex:1}
+  .mini-items .mini-foot .b{font-size:6.6px;height:17px;padding:0 5px;white-space:nowrap}
+  .sync-card{background:#fff;border:1px solid #d0d5dd;border-radius:8px;padding:10px 12px;box-shadow:0 10px 22px rgba(16,24,40,.05);height:94px}
+  .sync-top{display:flex;align-items:center;gap:7px;font-size:10px;color:#101828}
+  .sync-top b{font-weight:650}
+  .sync-top .dot{width:6px;height:6px;border-radius:50%;background:#2e9e4f;box-shadow:0 0 0 3px rgba(46,158,79,.12)}
+  .sync-top .tag{font-size:7.5px;letter-spacing:.08em;color:#1f7a3c;background:#e7f6ea;border:1px solid #bfe5c7;border-radius:3px;padding:2px 5px;font-weight:700}
+  .sync-top .id{margin-left:auto;font-family:var(--mono);font-size:8px;color:#98a2b3}
+  .sync-events{margin-top:8px;display:grid;gap:4px;font-size:8px;color:#475467}
+  .sync-events div{display:grid;grid-template-columns:48px 1fr 18px 1.2fr;align-items:center;gap:4px}
+  .sync-events .time{font-family:var(--mono);color:#98a2b3;font-size:7.5px}
+  .sync-events .ev{color:#344054;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sync-events .ar{color:#98a2b3;text-align:center}
+  .sync-events .res{color:#1f7a3c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* ---------- footer ---------- */
+  .board-foot{display:grid;grid-template-columns:1fr 430px;gap:40px;margin-top:24px;padding-top:16px;border-top:1px solid rgba(15,23,42,.12)}
+  .notes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px}
+  .note b{display:block;font-size:10px;letter-spacing:.06em;color:#101828;margin-bottom:4px}
+  .note b em{font-style:normal;color:var(--blue);margin-right:5px}
+  .note span{font-size:10px;line-height:1.55;color:#667085;display:block}
+  .palette{display:flex;align-items:flex-start;justify-content:flex-end;gap:7px;padding-top:2px}
+  .sw{width:44px;text-align:center;font-size:7px;color:#667085;font-family:var(--mono)}
+  .sw i{display:block;height:30px;border-radius:5px;margin-bottom:4px;border:1px solid rgba(15,23,42,.12)}
+</style>
+</head>
+<body>
+<svg class="sprite" aria-hidden="true">
+  <symbol id="i-chev-d" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-chev-r" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 16 16"><path d="M2 4.2h4.1l1.1 1.5H14v6.9H2z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M2 6h12" stroke="currentColor" stroke-width="1.2" opacity=".7"/></symbol>
+  <symbol id="i-file" viewBox="0 0 16 16"><path d="M4 2.2h5l3 3v8.6H4z" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/><path d="M9 2.2v3h3" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/></symbol>
+  <symbol id="i-target" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.2" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="8" cy="8" r="2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-build" viewBox="0 0 16 16"><path d="M3 13l6.2-6.2 2 2L5 15H3z" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/><path d="M9.4 3.4l3.2 3.2 1.5-1.5-3.2-3.2z" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/><path d="M8.9 4l-1.7 1.7 2.9 2.9 1.7-1.7" fill="none" stroke="currentColor" stroke-width="1.2"/></symbol>
+  <symbol id="i-rebuild" viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.5-3.6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M13 3v3h-3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 5.5v3l2 1.2" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></symbol>
+  <symbol id="i-download" viewBox="0 0 16 16"><path d="M8 2v7.2" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/><path d="M4.8 6.4L8 9.6l3.2-3.2" fill="none" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 13h10" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/></symbol>
+  <symbol id="i-wand" viewBox="0 0 16 16"><path d="M3 13l7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M8.6 3.2l1-1 3.2 3.2-1 1z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M11.4 5.4l1.8 1.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M3 3.2v2M2 4.2h2M12.2 12v2M11.2 13h2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></symbol>
+  <symbol id="i-sync" viewBox="0 0 16 16"><path d="M3 7a5 5 0 0 1 8.4-2.7L13 6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M13 3v3h-3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 9A5 5 0 0 1 4.6 11.7L3 10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M3 13v-3h3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.1" fill="none" stroke="currentColor" stroke-width="1.35"/><path d="M8 1.6v1.6M8 12.8v1.6M1.6 8h1.6M12.8 8h1.6M3.5 3.5l1.1 1.1M11.4 11.4l1.1 1.1M12.5 3.5l-1.1 1.1M4.6 11.4l-1.1 1.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></symbol>
+  <symbol id="i-search" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M10.2 10.2L14 14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-branch" viewBox="0 0 16 16"><circle cx="4.5" cy="3.5" r="1.6" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="4.5" cy="12.5" r="1.6" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="11.5" cy="5.5" r="1.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M4.5 5.1v5.8M11.5 7.1c0 2.2-2.4 2.6-4.2 3.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></symbol>
+  <symbol id="i-debug" viewBox="0 0 16 16"><rect x="3.5" y="3.5" width="9" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.35"/><path d="M6 6.5l4 2.5-4 2.5z" fill="currentColor"/><path d="M5 1.8v1.7M11 1.8v1.7M2 8h1.5M12.5 8H14M2.4 12l1.3-.7M12.3 11.3l1.3.7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="4.4" height="4.4" rx=".7" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="9.1" y="2.5" width="4.4" height="4.4" rx=".7" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="2.5" y="9.1" width="4.4" height="4.4" rx=".7" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M11.3 9.1v4.4M9.1 11.3h4.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></symbol>
+  <symbol id="i-account" viewBox="0 0 16 16"><circle cx="8" cy="5.2" r="2.7" fill="none" stroke="currentColor" stroke-width="1.35"/><path d="M2.8 14c.4-3 2.5-4.6 5.2-4.6s4.8 1.6 5.2 4.6" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></symbol>
+  <symbol id="i-chip" viewBox="0 0 16 16"><rect x="4" y="4" width="8" height="8" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.35"/><rect x="6.2" y="6.2" width="3.6" height="3.6" rx=".6" fill="none" stroke="currentColor" stroke-width="1.1"/><path d="M6 4V2.2M10 4V2.2M6 14v-1.8M10 14v-1.8M4 6H2.2M4 10H2.2M14 6h-1.8M14 10h-1.8" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/></symbol>
+  <symbol id="i-check" viewBox="0 0 16 16"><path d="M2.8 8.4l3.1 3.1 7.3-7.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-info" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.35"/><path d="M8 7v4M8 5.1v.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.5-3.6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M13 3v3h-3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-more" viewBox="0 0 16 16"><circle cx="3.5" cy="8" r="1" fill="currentColor"/><circle cx="8" cy="8" r="1" fill="currentColor"/><circle cx="12.5" cy="8" r="1" fill="currentColor"/></symbol>
+  <symbol id="i-close" viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+  <symbol id="i-split" viewBox="0 0 16 16"><rect x="2.5" y="3" width="11" height="10" rx="1" fill="none" stroke="currentColor" stroke-width="1.25"/><path d="M8 3v10" stroke="currentColor" stroke-width="1.25"/></symbol>
+  <symbol id="i-clear" viewBox="0 0 16 16"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-external" viewBox="0 0 16 16"><path d="M6.5 3H3v10h10V9.5" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 2.5h4.5V7M13.5 2.5L7.8 8.2" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-vscode" viewBox="0 0 16 16"><path d="M11.8 2.2l2.2 1.1v9.4l-2.2 1.1L3.6 7.9 2 9.1 1 8.5V7.5l1-.6 1.6 1.2z" fill="#0078d4"/><path d="M11.8 2.2v11.6L6 8.6z" fill="#39a7ff"/><path d="M2 7.5l1.6 1.1L2 9.7z" fill="#fff" opacity=".9"/></symbol>
+</svg>
+
+<main class="board">
+  <header class="board-head">
+    <div>
+      <div class="kicker"><span class="pill">CONCEPT A / 方案 A</span><span class="thin">NATIVE FIRST</span></div>
+      <h1>Native Workbench<span class="sub">原生工作台 · 让 Keil 工程“长”在 VS Code 里</span></h1>
+      <p class="head-desc">侧边栏、编辑器页签、底部面板、状态栏全部遵循 VS Code 原生交互。魔法棒作为可并排的自定义编辑器，工程项作为原生模态窗；适合每天都待在 VS Code 里的开发者。</p>
+      <div class="chips">
+        <span class="chip blue">零学习成本</span>
+        <span class="chip">原生树 / 面板 / 状态栏</span>
+        <span class="chip">文件级双向同步 + 冲突保护</span>
+        <span class="chip">中 / EN 即时切换</span>
+      </div>
+    </div>
+    <div class="flow-card">
+      <div class="flow-top"><b>SYNC MODEL · 同步模型</b><span>单源写入 · 双向监听</span></div>
+      <div class="flow">
+        <div class="node"><b>VS Code 扩展</b><span>Tree / Webview / 面板</span></div>
+        <div class="link"></div>
+        <div class="node mid"><b>.uvprojx / .uvoptx</b><span>Keil 官方工程格式</span></div>
+        <div class="link"></div>
+        <div class="node"><b>Keil µVision 5</b><span>UV4 CLI + UVSOCK</span></div>
+      </div>
+      <div class="flow-note"><i></i>构建 / 下载走 UV4；设置与目标走 XML 文件，Keil 侧自动重载</div>
+    </div>
+  </header>
+
+  <section class="stage">
+    <!-- ================= APP ================= -->
+    <div class="app">
+      <div class="titlebar">
+        <div class="tb-left">
+          <svg class="vs-logo"><use href="#i-vscode"/></svg>
+          <div class="menus"><span>File</span><span>Edit</span><span>Selection</span><span>View</span><span>Go</span><span>Run</span><span>Terminal</span><span>Help</span></div>
+        </div>
+        <div class="tb-title">atk_f103.uvprojx — Keil Studio — Visual Studio Code</div>
+        <div class="win-controls"><span>—</span><span>□</span><span>×</span></div>
+      </div>
+
+      <div class="app-body">
+        <div class="activity">
+          <div class="act on"><svg><use href="#i-file"/></svg></div>
+          <div class="act"><svg><use href="#i-search"/></svg></div>
+          <div class="act"><svg><use href="#i-branch"/></svg></div>
+          <div class="act"><svg><use href="#i-debug"/></svg></div>
+          <div class="act wand-badge"><svg><use href="#i-chip"/></svg></div>
+          <div class="act"><svg><use href="#i-ext"/></svg></div>
+          <div class="act-spacer"></div>
+          <div class="act"><svg><use href="#i-account"/></svg></div>
+          <div class="act"><svg><use href="#i-settings"/></svg></div>
+        </div>
+
+        <div class="sidebar">
+          <div class="side-head"><span>KEIL 工程 / PROJECT</span><div class="icons"><svg><use href="#i-refresh"/></svg><svg><use href="#i-more"/></svg></div></div>
+
+          <div class="project-card">
+            <div class="proj-icon"><svg><use href="#i-chip"/></svg></div>
+            <div class="proj-meta">
+              <div class="proj-name">atk_f103</div>
+              <div class="proj-sub">MDK-ARM · STM32F103ZE</div>
+            </div>
+            <div class="live"><i></i>LIVE</div>
+          </div>
+
+          <div class="target-box">
+            <div class="target-cap"><span>当前目标 / TARGET</span><b>2 个目标</b></div>
+            <div class="target-select">
+              <svg><use href="#i-target"/></svg>
+              <span>Target 1</span>
+              <svg class="cv"><use href="#i-chev-d"/></svg>
+              <span class="cnt">2</span>
+            </div>
+          </div>
+
+          <div class="actions">
+            <div class="abtn primary"><svg><use href="#i-build"/></svg><b>编译</b><small>BUILD · F7</small></div>
+            <div class="abtn"><svg><use href="#i-rebuild"/></svg><b>重建</b><small>REBUILD</small></div>
+            <div class="abtn"><svg><use href="#i-download"/></svg><b>下载</b><small>FLASH</small></div>
+          </div>
+          <div class="subactions">
+            <div class="sbtn"><svg><use href="#i-wand"/></svg>魔法棒</div>
+            <div class="sbtn"><svg><use href="#i-external"/></svg>在 Keil 打开</div>
+          </div>
+
+          <div class="tree">
+            <div class="row target current" style="--d:0"><svg class="chev"><use href="#i-chev-d"/></svg><svg class="tgt"><use href="#i-target"/></svg><span class="name">Target 1</span><span class="cur">CURRENT</span></div>
+            <div class="row group" style="--d:1"><svg class="chev"><use href="#i-chev-d"/></svg><svg class="folder"><use href="#i-folder"/></svg><span class="name">Core</span><span class="count">3</span></div>
+            <div class="row file active" style="--d:2"><svg class="c"><use href="#i-file"/></svg><span class="name">main.c</span></div>
+            <div class="row file" style="--d:2"><svg class="c"><use href="#i-file"/></svg><span class="name">stm32f1xx_it.c</span></div>
+            <div class="row file" style="--d:2"><svg class="c"><use href="#i-file"/></svg><span class="name">system_stm32f1xx.c</span></div>
+            <div class="row group" style="--d:1"><svg class="chev"><use href="#i-chev-r"/></svg><svg class="folder"><use href="#i-folder"/></svg><span class="name">CMSIS</span><span class="count">2</span></div>
+            <div class="row group" style="--d:1"><svg class="chev"><use href="#i-chev-d"/></svg><svg class="folder"><use href="#i-folder"/></svg><span class="name">StdPeriph</span><span class="count">6</span></div>
+            <div class="row file" style="--d:2"><svg class="c"><use href="#i-file"/></svg><span class="name">stm32f1xx_hal.c</span></div>
+            <div class="row file" style="--d:2"><svg class="c"><use href="#i-file"/></svg><span class="name">stm32f1xx_hal_gpio.c</span></div>
+            <div class="row file" style="--d:2"><svg class="c"><use href="#i-file"/></svg><span class="name">stm32f1xx_hal_rcc.c</span></div>
+            <div class="row group" style="--d:1"><svg class="chev"><use href="#i-chev-r"/></svg><svg class="folder"><use href="#i-folder"/></svg><span class="name">Startup</span><span class="count">1</span></div>
+            <div class="row dim target" style="--d:0"><svg class="chev"><use href="#i-chev-r"/></svg><svg class="tgt"><use href="#i-target"/></svg><span class="name">Release</span></div>
+          </div>
+
+          <div class="side-foot">
+            <div class="mem"><b>FLASH</b><div class="bar"><i style="width:8.1%"></i></div><span class="val">8.1%</span></div>
+            <div class="mem"><b>RAM</b><div class="bar"><i style="width:6.4%;background:#c586c0"></i></div><span class="val">6.4%</span></div>
+            <div class="last-build"><span class="dot"></span><span>上次构建</span><span class="ok">0 errors</span><span>· 15.2s</span></div>
+          </div>
+        </div>
+
+        <div class="main">
+          <div class="tabs">
+            <div class="tab"><svg style="color:#7fb3e8"><use href="#i-file"/></svg>main.c<span class="x">×</span></div>
+            <div class="tab on"><svg style="color:#8fd3ff"><use href="#i-wand"/></svg>Options for Target<span class="tab-dot"></span><span class="x">×</span></div>
+            <div class="tab-add">+</div>
+            <div class="tab-actions"><svg><use href="#i-split"/></svg><svg><use href="#i-more"/></svg></div>
+          </div>
+          <div class="crumb">
+            <span>atk_f103</span><span class="sep">›</span><span>Targets</span><span class="sep">›</span><span>Target 1</span><span class="sep">›</span><span class="end">Options for Target</span>
+            <div class="right"><i></i>Keil 5.43.1 · ARMCC 5.06 · 已连接</div>
+          </div>
+
+          <div class="editor">
+            <div class="opt-head">
+              <div class="opt-title">
+                <div class="wand-lg"><svg><use href="#i-wand"/></svg></div>
+                <div><h2>Options for Target 'Target 1'</h2><p>魔法棒 · 完整映射 Keil 的 10 个设置页签</p></div>
+              </div>
+              <div class="opt-sync"><i></i>已同步<span class="conf">0 冲突</span></div>
+            </div>
+
+            <div class="opt-tabs">
+              <div class="otab">Device</div><div class="otab on">Target</div><div class="otab">Output</div><div class="otab">Listing</div><div class="otab">User</div><div class="otab">C/C++</div><div class="otab">Asm</div><div class="otab">Linker</div><div class="otab">Debug</div><div class="otab">Utilities</div>
+            </div>
+
+            <div class="opt-body">
+              <div class="opt-col">
+                <div class="fsec">
+                  <h3>目标 / TARGET</h3>
+                  <div class="frow"><label>Xtal (MHz)</label><input value="12.0"></div>
+                  <div class="frow"><label>ARM Compiler</label><div class="fake" style="font-family:var(--ui);display:flex;align-items:center;justify-content:space-between">Use default compiler version 5 <span style="color:#888">▾</span></div></div>
+                  <label class="check"><span class="box checked"></span>Use Cross-Module Optimization</label>
+                  <label class="check"><span class="box checked"></span>Use MicroLIB</label>
+                  <label class="check"><span class="box"></span>Big Endian</label>
+                </div>
+                <div class="fsec">
+                  <h3>输出 / OUTPUT</h3>
+                  <div class="frow"><label>Name of Executable</label><input value="atk_f103"></div>
+                  <div class="frow"><label>Output Folder</label><input value="..\..\Output\"></div>
+                  <label class="check"><span class="box checked"></span>Create HEX File</label>
+                  <label class="check"><span class="box checked"></span>Debug Information</label>
+                </div>
+              </div>
+              <div class="opt-col">
+                <div class="fsec">
+                  <h3>只读存储区 / ROM</h3>
+                  <div class="memgrid head"><span></span><span>Start</span><span>Size</span></div>
+                  <div class="memgrid"><label class="check"><span class="box checked"></span>IROM1</label><input value="0x08000000"><input value="0x80000"></div>
+                  <div class="memgrid"><label class="check"><span class="box"></span>IROM2</label><input value=""><input value=""></div>
+                </div>
+                <div class="fsec">
+                  <h3>读写存储区 / RAM</h3>
+                  <div class="memgrid head"><span></span><span>Start</span><span>Size</span></div>
+                  <div class="memgrid"><label class="check"><span class="box checked"></span>IRAM1</label><input value="0x20000000"><input value="0x10000"></div>
+                  <div class="memgrid"><label class="check"><span class="box"></span>IRAM2</label><input value=""><input value=""></div>
+                </div>
+                <div class="note-box"><svg><use href="#i-info"/></svg><span>保存时按 XML 节点原位写回，保留 RTE 组件与未知字段；Keil 打开中的冲突会被拦截。</span></div>
+              </div>
+            </div>
+
+            <div class="opt-foot">
+              <span class="foot-note"><svg style="width:11px;height:11px;color:#89d185"><use href="#i-check"/></svg>上次写入 <b>.uvprojx</b> 20:31:04 · Keil 已重载</span>
+              <div class="btn-row"><div class="btn">Reset</div><div class="btn">Cancel</div><div class="btn">Apply</div><div class="btn primary">OK</div></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div class="ptabs"><span class="on">OUTPUT</span><span>PROBLEMS <b>0</b></span><span>TERMINAL</span></div>
+              <div class="pactions"><svg><use href="#i-clear"/></svg><svg><use href="#i-split"/></svg><svg><use href="#i-close"/></svg></div>
+            </div>
+            <div class="build-badge"><svg><use href="#i-check"/></svg>BUILD SUCCEEDED <span>3.2s</span></div>
+            <div class="log"><span class="dim">*** Using Compiler 'V5.06 update 6 (build 750)', folder: 'F:\KEIL\ARM\ARMCC\Bin'</span>
+Build target 'Target 1'
+compiling <span class="path">main.c</span>...
+compiling <span class="path">stm32f1xx_hal_gpio.c</span>...
+compiling <span class="path">stm32f1xx_it.c</span>...
+linking...
+Program Size: Code=5186 RO-data=362 RW-data=28 ZI-data=1900
+<span class="ok">".\Objects\atk_f103.axf" - 0 Error(s), 0 Warning(s).</span>
+<span class="dim">Build Time Elapsed:  00:00:03</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="statusbar">
+        <div class="sb-left">
+          <span class="sb-item"><svg><use href="#i-branch"/></svg>main*</span>
+          <span class="sb-item"><span class="live-dot"></span>Keil 已连接</span>
+          <span class="sb-item"><svg><use href="#i-sync"/></svg>已同步</span>
+        </div>
+        <div class="sb-right">
+          <span class="sb-item">Target 1</span>
+          <span class="sb-item">0 errors</span>
+          <span class="sb-item">ARMCC 5.06</span>
+          <span class="sb-item">UTF-8</span>
+          <span class="lang"><b>中</b><span>EN</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= DETAILS ================= -->
+    <aside class="details">
+      <div>
+        <div class="detail-label"><b>01</b> MAGIC WAND · 魔法棒</div>
+        <div class="mini mini-opt">
+          <div class="mini-title"><svg><use href="#i-wand"/></svg><span>Options for Target 'Target 1'</span><span class="x">×</span></div>
+          <div class="mini-tabs">
+            <div class="mini-tab">Device</div><div class="mini-tab on">Target</div><div class="mini-tab">Output</div><div class="mini-tab">Listing</div><div class="mini-tab">User</div><div class="mini-tab">C/C++</div><div class="mini-tab">Asm</div><div class="mini-tab">Linker</div><div class="mini-tab">Debug</div><div class="mini-tab">Utilities</div>
+          </div>
+          <div class="mini-body">
+            <div class="mini-sec">
+              <h4>TARGET</h4>
+              <div class="mini-row"><label>Xtal (MHz)</label><div class="f">12.0</div></div>
+              <div class="mini-row"><label>Compiler</label><div class="f">ARMCC V5.06</div></div>
+              <div class="mini-checks">
+                <div class="mini-check"><span class="mini-box on"></span>Cross-Module Opt.</div>
+                <div class="mini-check"><span class="mini-box on"></span>Use MicroLIB</div>
+                <div class="mini-check"><span class="mini-box"></span>Big Endian</div>
+              </div>
+              <h4 style="margin-top:9px">OUTPUT</h4>
+              <div class="mini-row"><label>Executable</label><div class="f">atk_f103</div></div>
+              <div class="mini-row"><label>Folder</label><div class="f">..\..\Output\</div></div>
+              <div class="mini-row"><label>HEX</label><div class="f">Create HEX File</div></div>
+              <h4 style="margin-top:9px">C/C++</h4>
+              <div class="mini-row"><label>Define</label><div class="f">USE_HAL_DRIVER</div></div>
+              <div class="mini-row"><label>Optimize</label><div class="f">-O1 · default</div></div>
+            </div>
+            <div class="mini-sec">
+              <h4>MEMORY AREAS</h4>
+              <div class="mini-row"><label>IROM1</label><div class="f">0x08000000 / 0x80000</div></div>
+              <div class="mini-row"><label>IROM2</label><div class="f">—</div></div>
+              <div class="mini-row"><label>IRAM1</label><div class="f">0x20000000 / 0x10000</div></div>
+              <div class="mini-row"><label>IRAM2</label><div class="f">—</div></div>
+              <h4 style="margin-top:9px">DEBUG / FLASH</h4>
+              <div class="mini-row"><label>Driver</label><div class="f">ST-Link Debugger</div></div>
+              <div class="mini-row"><label>Flash</label><div class="f">STM32F10x 512K</div></div>
+              <div class="mini-row"><label>Algorithm</label><div class="f">0x08000000 · 512K</div></div>
+              <h4 style="margin-top:9px">LINKER</h4>
+              <div class="mini-row"><label>Scatter</label><div class="f">Target 1.sct</div></div>
+              <div class="mini-row"><label>Misc</label><div class="f">--strict</div></div>
+            </div>
+          </div>
+          <div class="mini-foot"><span>写回 .uvprojx + .uvoptx</span><span><span class="b">Cancel</span> <span class="b p">OK</span></span></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="detail-label"><b>02</b> MANAGE PROJECT ITEMS · 工程项</div>
+        <div class="mini mini-items">
+          <div class="mini-title"><svg style="color:#dcb67a"><use href="#i-folder"/></svg><span>Manage Project Items</span><span class="x">×</span></div>
+          <div class="mini-tabs"><div class="mini-tab on">Project Items</div><div class="mini-tab">Folders/Extensions</div><div class="mini-tab">Books</div><div class="mini-tab">Project Info/Layer</div></div>
+          <div class="mini-panes">
+            <div class="pane">
+              <div class="pane-head">Project Targets <span class="tools">+ − ↑ ↓</span></div>
+              <div class="list"><div class="li sel"><svg><use href="#i-target"/></svg>Target 1</div><div class="li"><svg><use href="#i-target"/></svg>Release</div></div>
+            </div>
+            <div class="pane">
+              <div class="pane-head">Groups <span class="tools">+ − ↑ ↓</span></div>
+              <div class="list"><div class="li sel"><svg><use href="#i-folder"/></svg>Core</div><div class="li"><svg><use href="#i-folder"/></svg>CMSIS</div><div class="li"><svg><use href="#i-folder"/></svg>StdPeriph</div><div class="li"><svg><use href="#i-folder"/></svg>Startup</div></div>
+            </div>
+            <div class="pane">
+              <div class="pane-head">Files <span class="tools">× ↑ ↓</span></div>
+              <div class="list"><div class="li"><svg style="color:#7fb3e8"><use href="#i-file"/></svg>main.c</div><div class="li"><svg style="color:#7fb3e8"><use href="#i-file"/></svg>stm32f1xx_it.c</div><div class="li"><svg style="color:#7fb3e8"><use href="#i-file"/></svg>system_stm32f1xx.c</div></div>
+            </div>
+          </div>
+          <div class="mini-foot"><span class="b">Set as Current Target</span><span class="spacer"></span><span class="b">Add Files…</span><span class="b p">OK</span><span class="b">Cancel</span></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="detail-label"><b>03</b> KEIL BRIDGE · 双向同步</div>
+        <div class="sync-card">
+          <div class="sync-top"><span class="dot"></span><b>Keil Bridge</b><span class="tag">CONNECTED</span><span class="id">UV4 · 5.43.1</span></div>
+          <div class="sync-events">
+            <div><span class="time">20:31:02</span><span class="ev">Keil 保存 .uvoptx</span><span class="ar">→</span><span class="res">Target 1 已同步</span></div>
+            <div><span class="time">20:31:04</span><span class="ev">VSCode 写入 .uvprojx</span><span class="ar">→</span><span class="res">Keil 已重载</span></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <footer class="board-foot">
+    <div class="notes">
+      <div class="note"><b><em>01</em>原生优先</b><span>使用 VS Code TreeView、Webview 编辑器、Output 面板与状态栏，不做“套壳 IDE”；快捷键、主题、缩放都与编辑器一致。</span></div>
+      <div class="note"><b><em>02</em>设置可追溯</b><span>每个字段显示对应的 XML 节点；保存前做 XSD 校验与冲突检测，支持单字段 Reset 与整页 Apply。</span></div>
+      <div class="note"><b><em>03</em>同步边界清晰</b><span>编译/下载走 UV4；目标与设置走文件。Keil 打开时只允许“应用并重载”，避免双写覆盖。</span></div>
+    </div>
+    <div class="palette">
+      <div class="sw"><i style="background:#0078d4"></i>#0078D4</div>
+      <div class="sw"><i style="background:#1f1f1f"></i>#1F1F1F</div>
+      <div class="sw"><i style="background:#252526"></i>#252526</div>
+      <div class="sw"><i style="background:#89d185"></i>#89D185</div>
+      <div class="sw"><i style="background:#e2c08d"></i>#E2C08D</div>
+      <div class="sw"><i style="background:#f3f3f3"></i>#F3F3F3</div>
+    </div>
+  </footer>
+</main>
+</body>
+</html>

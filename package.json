@@ -1,0 +1,357 @@
+{
+  "name": "keil-studio",
+  "displayName": "KeilEx",
+  "description": "Open, build, configure and sync Keil MDK-ARM projects inside VS Code. 在 VS Code 中打开、编译、配置并同步 Keil MDK-ARM 工程。",
+  "version": "0.4.1",
+  "publisher": "keil-studio-dev",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "keywords": [
+    "keil",
+    "mdk",
+    "arm",
+    "stm32",
+    "uvprojx",
+    "embedded"
+  ],
+  "main": "./dist/extension.js",
+  "icon": "media/icon.png",
+  "files": [
+    "dist/**",
+    "media/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "activationEvents": [
+    "workspaceContains:**/*.uvprojx",
+    "onStartupFinished",
+    "onView:keilStudio.project",
+    "onCommand:keilStudio.openProject",
+    "onCommand:keilStudio.openProjectFile",
+    "onCommand:keilStudio.build",
+    "onCommand:keilStudio.rebuild",
+    "onCommand:keilStudio.clean",
+    "onCommand:keilStudio.download",
+    "onCommand:keilStudio.openOptions",
+    "onCommand:keilStudio.manageItems",
+    "onCommand:keilStudio.switchTarget",
+    "onCommand:keilStudio.openInKeil",
+    "onCommand:keilStudio.syncIntelliSense",
+    "onCommand:keilStudio.clearIntelliSenseCache"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false
+    }
+  },
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "keilex",
+          "title": "KeilEx",
+          "icon": "media/keil.svg"
+        }
+      ]
+    },
+    "views": {
+      "keilex": [
+        {
+          "id": "keilStudio.project",
+          "name": "KeilEx",
+          "contextualTitle": "KeilEx",
+          "type": "webview"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "keilStudio.openProject",
+        "title": "打开 Keil 工程 / Open Keil Project",
+        "icon": "$(folder-opened)"
+      },
+      {
+        "command": "keilStudio.openProjectFile",
+        "title": "打开为 Keil 工程 / Open as Keil Project"
+      },
+      {
+        "command": "keilStudio.refresh",
+        "title": "刷新工程 / Refresh Project",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "keilStudio.build",
+        "title": "编译 / Build",
+        "icon": "$(tools)"
+      },
+      {
+        "command": "keilStudio.rebuild",
+        "title": "重新编译 / Rebuild",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "keilStudio.clean",
+        "title": "清理 / Clean",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "keilStudio.download",
+        "title": "下载到芯片 / Download to Flash",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "keilStudio.switchTarget",
+        "title": "切换目标 / Switch Target",
+        "icon": "$(list-selection)"
+      },
+      {
+        "command": "keilStudio.openOptions",
+        "title": "魔法棒设置 / Options for Target",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "keilStudio.manageItems",
+        "title": "项目项 / Project Items",
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "keilStudio.openInKeil",
+        "title": "在 Keil 中打开 / Open in Keil",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "keilStudio.syncIntelliSense",
+        "title": "同步 C/C++ 包含路径 / Sync IntelliSense",
+        "category": "KeilEx",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "keilStudio.clearIntelliSenseCache",
+        "title": "清理 C/C++ 缓存 / Clear IntelliSense Cache",
+        "category": "KeilEx",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "keilStudio.toggleLanguage",
+        "title": "切换中英文 / Toggle Language",
+        "icon": "$(globe)"
+      },
+      {
+        "command": "keilStudio.showOutput",
+        "title": "显示构建输出 / Show Build Output",
+        "icon": "$(output)"
+      },
+      {
+        "command": "keilStudio.closeProject",
+        "title": "关闭工程 / Close Project"
+      },
+      {
+        "command": "keilStudio.revealInProject",
+        "title": "在工程树中定位 / Reveal in Project",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "keilStudio.cancelBuild",
+        "title": "取消构建 / Cancel Build"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "keilStudio.openProjectFile",
+          "group": "navigation@20",
+          "when": "resourceExtname == .uvprojx"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "keilStudio.openProjectFile",
+          "when": "false"
+        },
+        {
+          "command": "keilStudio.build",
+          "when": "keilStudio.hasProject"
+        },
+        {
+          "command": "keilStudio.rebuild",
+          "when": "keilStudio.hasProject"
+        },
+        {
+          "command": "keilStudio.clean",
+          "when": "keilStudio.hasProject"
+        },
+        {
+          "command": "keilStudio.download",
+          "when": "keilStudio.hasProject"
+        },
+        {
+          "command": "keilStudio.switchTarget",
+          "when": "keilStudio.hasProject && keilStudio.hasMultipleTargets"
+        },
+        {
+          "command": "keilStudio.openOptions",
+          "when": "keilStudio.hasProject"
+        },
+        {
+          "command": "keilStudio.manageItems",
+          "when": "keilStudio.hasProject"
+        },
+        {
+          "command": "keilStudio.openInKeil",
+          "when": "keilStudio.hasProject"
+        },
+        {
+          "command": "keilStudio.syncIntelliSense",
+          "when": "keilStudio.hasProject"
+        },
+        {
+          "command": "keilStudio.clearIntelliSenseCache"
+        },
+        {
+          "command": "keilStudio.closeProject",
+          "when": "keilStudio.hasProject"
+        },
+        {
+          "command": "keilStudio.cancelBuild",
+          "when": "keilStudio.hasProject"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "keilStudio.build",
+        "key": "f7",
+        "when": "keilStudio.hasProject"
+      },
+      {
+        "command": "keilStudio.rebuild",
+        "key": "ctrl+alt+f7",
+        "when": "keilStudio.hasProject"
+      },
+      {
+        "command": "keilStudio.download",
+        "key": "ctrl+alt+d",
+        "when": "keilStudio.hasProject"
+      },
+      {
+        "command": "keilStudio.openOptions",
+        "key": "ctrl+alt+o",
+        "when": "keilStudio.hasProject"
+      }
+    ],
+    "configuration": {
+      "title": "KeilEx",
+      "properties": {
+        "keilStudio.uv4Path": {
+          "type": "string",
+          "scope": "machine",
+          "default": "",
+          "markdownDescription": "UV4.exe 的绝对路径；留空自动检测。\n\n示例：F:\\Keil_v5\\UV4\\UV4.exe\n\nAbsolute path to UV4.exe. Leave empty to auto-detect."
+        },
+        "keilStudio.armccPath": {
+          "type": "string",
+          "scope": "machine",
+          "default": "",
+          "markdownDescription": "ARMCC 编译器路径（可选）。留空自动检测 Keil 安装目录。\n\n示例：F:\\Keil_v5\\ARM\\ARMCC\\bin\\armcc.exe"
+        },
+        "keilStudio.armclangPath": {
+          "type": "string",
+          "scope": "machine",
+          "default": "",
+          "markdownDescription": "ARMCLANG 编译器路径（可选）。留空自动检测。\n\n示例：F:\\Keil_v5\\ARM\\ARMCLANG\\bin\\armclang.exe"
+        },
+        "keilStudio.armGccPath": {
+          "type": "string",
+          "scope": "machine",
+          "default": "",
+          "markdownDescription": "ARM GCC 编译器路径，用于 C/C++ IntelliSense。留空自动检测。\n\n示例：D:\\EmbeddedTool\\arm-none-eabi\\bin\\arm-none-eabi-gcc.exe"
+        },
+        "keilStudio.language": {
+          "type": "string",
+          "enum": [
+            "zh",
+            "en",
+            "auto"
+          ],
+          "enumDescriptions": [
+            "简体中文",
+            "English",
+            "跟随 VS Code 显示语言 / Follow VS Code display language"
+          ],
+          "default": "zh",
+          "description": "扩展界面语言。默认中文。 / Extension UI language. Defaults to Chinese."
+        },
+        "keilStudio.buildBeforeDownload": {
+          "type": "boolean",
+          "default": true,
+          "description": "下载前先执行一次增量编译。 / Build before flashing."
+        },
+        "keilStudio.showBuildOutput": {
+          "type": "boolean",
+          "default": true,
+          "description": "构建开始时自动显示输出面板。 / Reveal the output panel when a build starts."
+        },
+        "keilStudio.autoRefresh": {
+          "type": "boolean",
+          "default": true,
+          "description": "监听 .uvprojx/.uvoptx 的外部修改并自动刷新工程树。 / Watch project files and refresh on external changes."
+        },
+        "keilStudio.syncIntelliSense": {
+          "type": "boolean",
+          "default": true,
+          "description": "自动把 Keil 的 IncludePath 和 Define 同步到 .vscode/c_cpp_properties.json，消除 C/C++ 找不到头文件。 / Sync Keil include paths and defines to c_cpp_properties.json."
+        },
+        "keilStudio.autoOpenProjectFolder": {
+          "type": "boolean",
+          "default": true,
+          "description": "打开 .uvprojx 时自动在 VS Code 中打开工程所在文件夹。 / Automatically open the project folder when a Keil project is opened."
+        },
+        "keilStudio.warnWhenKeilRunning": {
+          "type": "boolean",
+          "default": true,
+          "description": "检测到 UV4.exe 正在运行时，在构建输出中给出提示。 / Warn when uVision is running."
+        },
+        "keilStudio.keilPollSeconds": {
+          "type": "number",
+          "default": 8,
+          "minimum": 0,
+          "maximum": 60,
+          "description": "检测 Keil 进程的间隔（秒），0 表示关闭。 / Seconds between uVision process checks, 0 disables."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "esbuild src/extension.js --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js",
+    "watch": "esbuild src/extension.js --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js --watch",
+    "test": "node test/test-core.js",
+    "test:core": "node test/test-core.js",
+    "test:controller": "node test/test-controller.js",
+    "test:webview": "node test/preview.js && node test/test-webview.js",
+    "test:dist": "node test/test-dist.js",
+    "test:all": "npm run test:core && npm run test:controller && npm run test:webview",
+    "package": "npm run build && vsce package --no-dependencies"
+  },
+  "dependencies": {
+    "@xmldom/xmldom": "^0.9.12"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "^3.6.0",
+    "esbuild": "^0.25.10",
+    "puppeteer-core": "^24.43.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YH2021-cc/KeilEx.git"
+  },
+  "homepage": "https://github.com/YH2021-cc/KeilEx",
+  "bugs": {
+    "url": "https://github.com/YH2021-cc/KeilEx/issues"
+  }
+}
