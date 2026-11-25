@@ -2,7 +2,7 @@
   "name": "keil-studio",
   "displayName": "KeilEx",
   "description": "Open, build, configure and sync Keil MDK-ARM projects inside VS Code. 在 VS Code 中打开、编译、配置并同步 Keil MDK-ARM 工程。",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "publisher": "keil-studio-dev",
   "license": "MIT",
   "engines": {
